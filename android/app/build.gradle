@@ -107,7 +107,9 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
-    implementation("com.facebook.react:flipper-integration")
+
+    // Navigation with voice handled via TTS in React Native layer
+    // Uses pre-computed turn instructions from Mapbox Map Matching API
 
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
