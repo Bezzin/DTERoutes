@@ -8,10 +8,16 @@
 import React from 'react';
 import { StyleSheet, View, Text, Alert } from 'react-native';
 import MapboxNavigation from '@pawan-pk/react-native-mapbox-navigation';
+import { sampleRouteWaypoints, logWaypointStats } from '../utils/routeUtils';
 
 interface NavigationViewProps {
   origin: [number, number]; // [longitude, latitude]
   destination: [number, number]; // [longitude, latitude]
+  routeGeometry?: {
+    // GeoJSON geometry from database
+    type: string;
+    coordinates: number[][];
+  };
   waypoints?: Array<[number, number]>; // Optional intermediate waypoints
   onCancelNavigation?: () => void;
   onArrive?: () => void;
@@ -21,6 +27,7 @@ interface NavigationViewProps {
 export default function NavigationView({
   origin,
   destination,
+  routeGeometry,
   waypoints = [],
   onCancelNavigation,
   onArrive,
@@ -37,8 +44,34 @@ export default function NavigationView({
     longitude: destination[0],
   };
 
-  // Convert waypoints array
-  const waypointsFormatted = waypoints.map(wp => ({
+  // Extract and sample waypoints from route geometry
+  // This ensures the calculated route follows the exact database path
+  const sampledWaypoints = React.useMemo(() => {
+    if (routeGeometry?.coordinates && routeGeometry.coordinates.length > 2) {
+      const allCoords = routeGeometry.coordinates;
+
+      // Remove first and last (those are origin/destination)
+      const intermediatePoints = allCoords.slice(1, -1);
+
+      // Sample to max 23 waypoints (Mapbox limit is 25 total coordinates)
+      const sampled = sampleRouteWaypoints(intermediatePoints, 23);
+
+      // Log stats for debugging
+      logWaypointStats(
+        allCoords.length,
+        sampled.length,
+        0 // Turn count logged separately in routeUtils
+      );
+
+      return sampled;
+    }
+
+    // Otherwise use provided waypoints
+    return waypoints;
+  }, [routeGeometry, waypoints]);
+
+  // Convert waypoints array to Mapbox format
+  const waypointsFormatted = sampledWaypoints.map(wp => ({
     latitude: wp[1],
     longitude: wp[0],
   }));
