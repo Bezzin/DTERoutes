@@ -148,6 +148,15 @@ export default function NavigationView({
         </Text>
       </View>
 
+      {/* DEBUG: Waypoint progress counter - Remove before production */}
+      <View style={styles.debugBanner}>
+        <Text style={styles.debugText}>
+          🧪 DEBUG: Waypoints {waypointArrivalCount}/{totalWaypointsRef.current}
+          {waypointArrivalCount > 0 && waypointArrivalCount <= totalWaypointsRef.current && ' - CONTINUING ✓'}
+          {waypointArrivalCount > totalWaypointsRef.current && ' - COMPLETED ✓'}
+        </Text>
+      </View>
+
       <MapboxNavigation
         startOrigin={startOrigin}
         destination={destinationPoint}
@@ -185,6 +194,18 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
+    textAlign: 'center',
+  },
+  debugBanner: {
+    backgroundColor: '#8b5cf6', // Purple for debug
+    padding: 10,
+    alignItems: 'center',
+    zIndex: 999,
+  },
+  debugText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
     textAlign: 'center',
   },
 });
