@@ -33,6 +33,10 @@ export default function NavigationView({
   onArrive,
   onError,
 }: NavigationViewProps) {
+  // Track waypoint arrivals to distinguish intermediate waypoints from final destination
+  const [waypointArrivalCount, setWaypointArrivalCount] = React.useState(0);
+  const totalWaypointsRef = React.useRef(0);
+
   // Convert [lng, lat] to {latitude, longitude} format
   const startOrigin = {
     latitude: origin[1],
@@ -76,6 +80,13 @@ export default function NavigationView({
     longitude: wp[0],
   }));
 
+  // Calculate total waypoints (intermediate + final destination)
+  // Store in ref to track across renders
+  React.useEffect(() => {
+    totalWaypointsRef.current = waypointsFormatted.length;
+    setWaypointArrivalCount(0); // Reset count when waypoints change
+  }, [waypointsFormatted.length]);
+
   const handleLocationChange = (event: any) => {
     // Track user location during navigation
     if (event?.nativeEvent) {
@@ -104,11 +115,28 @@ export default function NavigationView({
   };
 
   const handleArrive = () => {
-    Alert.alert(
-      'Route Complete! 🎉',
-      'You have successfully completed the test route.',
-      [{ text: 'OK', onPress: onArrive }]
-    );
+    // Increment arrival count
+    const newCount = waypointArrivalCount + 1;
+    setWaypointArrivalCount(newCount);
+
+    // Check if this is an intermediate waypoint or the final destination
+    // Intermediate waypoints: 1 to totalWaypointsRef.current
+    // Final destination: totalWaypointsRef.current + 1
+    const isIntermediateWaypoint = newCount <= totalWaypointsRef.current;
+
+    if (isIntermediateWaypoint) {
+      // Reached an intermediate waypoint - log but don't show completion
+      console.log(`Reached waypoint ${newCount} of ${totalWaypointsRef.current}. Continuing to next waypoint...`);
+      // Optionally show a brief notification (commented out to avoid disrupting navigation)
+      // Alert.alert('Waypoint Reached', `Waypoint ${newCount} of ${totalWaypointsRef.current}`, [{ text: 'Continue' }]);
+    } else {
+      // Reached final destination - show completion message
+      Alert.alert(
+        'Route Complete! 🎉',
+        'You have successfully completed the test route.',
+        [{ text: 'OK', onPress: onArrive }]
+      );
+    }
   };
 
   return (
