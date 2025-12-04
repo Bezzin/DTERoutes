@@ -27,10 +27,5 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
-      <activity
-        android:name=".navigation.TestRouteNavigationActivity"
-        android:theme="@style/Theme.AppCompat.NoActionBar"
-        android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize"
-        android:windowSoftInputMode="adjustResize" />
     </application>
 </manifest>
