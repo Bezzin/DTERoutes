@@ -3,12 +3,20 @@
  * ==========================
  * Full Mapbox Navigation with turn-by-turn voice guidance
  * Uses @pawan-pk/react-native-mapbox-navigation
+ * Includes speed limit warnings
  */
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { StyleSheet, View, Text, Alert } from 'react-native';
 import MapboxNavigation from '@pawan-pk/react-native-mapbox-navigation';
 import { sampleRouteWaypoints, logWaypointStats } from '../utils/routeUtils';
+import SpeedLimitDisplay from './SpeedLimitDisplay';
+
+interface SpeedLimitData {
+  speed?: number;
+  unit?: string;
+  unknown?: boolean;
+}
 
 interface NavigationViewProps {
   origin: [number, number]; // [longitude, latitude]
@@ -17,6 +25,11 @@ interface NavigationViewProps {
     // GeoJSON geometry from database
     type: string;
     coordinates: number[][];
+  };
+  routeAnnotations?: {
+    // Speed limit annotations from Mapbox
+    maxspeed?: SpeedLimitData[];
+    speed?: number[];
   };
   waypoints?: Array<[number, number]>; // Optional intermediate waypoints
   onCancelNavigation?: () => void;
@@ -28,14 +41,41 @@ export default function NavigationView({
   origin,
   destination,
   routeGeometry,
+  routeAnnotations,
   waypoints = [],
   onCancelNavigation,
   onArrive,
   onError,
 }: NavigationViewProps) {
   // Track waypoint arrivals to distinguish intermediate waypoints from final destination
-  const [waypointArrivalCount, setWaypointArrivalCount] = React.useState(0);
+  const [waypointArrivalCount, setWaypointArrivalCount] = useState(0);
   const totalWaypointsRef = React.useRef(0);
+  
+  // Track current segment index for speed limit
+  const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
+  const [isSpeedWarning, setIsSpeedWarning] = useState(false);
+
+  // Extract current speed limit from annotations
+  const currentSpeedLimit = useMemo(() => {
+    if (!routeAnnotations?.maxspeed || routeAnnotations.maxspeed.length === 0) {
+      return undefined;
+    }
+    
+    // Get speed limit for current segment
+    const speedData = routeAnnotations.maxspeed[currentSegmentIndex];
+    if (!speedData || speedData.unknown) {
+      // If current segment unknown, try to find nearest known limit
+      for (let i = currentSegmentIndex; i >= 0; i--) {
+        const data = routeAnnotations.maxspeed[i];
+        if (data && !data.unknown && data.speed) {
+          return data.speed;
+        }
+      }
+      return undefined;
+    }
+    
+    return speedData.speed;
+  }, [routeAnnotations, currentSegmentIndex]);
 
   // Convert [lng, lat] to {latitude, longitude} format
   const startOrigin = {
@@ -98,6 +138,22 @@ export default function NavigationView({
     // Track navigation progress
     if (event?.nativeEvent) {
       console.log('Progress:', event.nativeEvent?.distanceRemaining, event.nativeEvent?.durationRemaining);
+      
+      // Update segment index based on progress if available
+      // This helps track which speed limit applies
+      if (event.nativeEvent?.legIndex !== undefined && event.nativeEvent?.stepIndex !== undefined) {
+        const newIndex = event.nativeEvent.legIndex * 10 + event.nativeEvent.stepIndex;
+        if (newIndex !== currentSegmentIndex) {
+          setCurrentSegmentIndex(newIndex);
+        }
+      }
+    }
+  };
+
+  const handleSpeedUpdate = (speed: number, isOverLimit: boolean) => {
+    setIsSpeedWarning(isOverLimit);
+    if (isOverLimit) {
+      console.log(`⚠️ Speed warning: ${speed.toFixed(0)} mph (limit: ${currentSpeedLimit ? Math.round(currentSpeedLimit * 0.621371) : '?'} mph)`);
     }
   };
 
@@ -142,10 +198,22 @@ export default function NavigationView({
   return (
     <View style={styles.container}>
       {/* Re-routing disabled banner */}
-      <View style={styles.warningBanner}>
+      <View style={[styles.warningBanner, isSpeedWarning && styles.speedWarningBanner]}>
         <Text style={styles.warningText}>
-          ⚠️ Re-routing DISABLED - Follow exact route
+          {isSpeedWarning 
+            ? '🚨 SLOW DOWN - Speed limit exceeded!'
+            : '⚠️ Re-routing DISABLED - Follow exact route'}
         </Text>
+      </View>
+
+      {/* Speed Limit Display */}
+      <View style={styles.speedLimitContainer}>
+        <SpeedLimitDisplay
+          currentSpeedLimit={currentSpeedLimit}
+          unit="mph"
+          warningThreshold={5}
+          onSpeedUpdate={handleSpeedUpdate}
+        />
       </View>
 
       {/* DEBUG: Waypoint progress counter - Remove before production */}
@@ -190,11 +258,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 1000,
   },
+  speedWarningBanner: {
+    backgroundColor: '#dc2626', // Red when speeding
+  },
   warningText: {
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  speedLimitContainer: {
+    position: 'absolute',
+    top: 100,
+    right: 16,
+    zIndex: 1001,
   },
   debugBanner: {
     backgroundColor: '#8b5cf6', // Purple for debug

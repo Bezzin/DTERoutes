@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">TestRoutesExpert</string>
+    <!-- Mapbox public token for @rnmapbox/maps (pk. prefix = safe for client apps) -->
     <string name="mapbox_access_token">pk.eyJ1IjoiYmV6emluIiwiYSI6ImNtaWYxN2Z6ejA4Y3AzZnM5ZXdraTBubDcifQ.vsINfDUNhqrgJyRf9RU12g</string>
 </resources>

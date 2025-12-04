@@ -63,6 +63,7 @@ async function callMapMatchingAPI(coordinates) {
     `&voice_instructions=true` +
     `&banner_instructions=true` +
     `&voice_units=metric` +
+    `&annotations=maxspeed,speed,duration` +  // Speed limit data for each segment
     `&access_token=${MAPBOX_ACCESS_TOKEN}`;
 
   console.log(`    Processing ${coordinates.length} points...`);

@@ -21,6 +21,37 @@ import { NavigationScreenProps } from '../types/navigation';
 import { useRoutesStore } from '../store/useRoutesStore';
 import NavigationView from '../components/NavigationView';
 
+/**
+ * Extract speed limit annotations from Mapbox route data
+ * Combines annotations from all legs into a single array
+ */
+function extractRouteAnnotations(mapboxRoute: any) {
+  if (!mapboxRoute?.legs) {
+    return undefined;
+  }
+
+  const allMaxspeeds: any[] = [];
+  const allSpeeds: number[] = [];
+
+  for (const leg of mapboxRoute.legs) {
+    if (leg.annotation?.maxspeed) {
+      allMaxspeeds.push(...leg.annotation.maxspeed);
+    }
+    if (leg.annotation?.speed) {
+      allSpeeds.push(...leg.annotation.speed);
+    }
+  }
+
+  if (allMaxspeeds.length === 0 && allSpeeds.length === 0) {
+    return undefined;
+  }
+
+  return {
+    maxspeed: allMaxspeeds.length > 0 ? allMaxspeeds : undefined,
+    speed: allSpeeds.length > 0 ? allSpeeds : undefined,
+  };
+}
+
 export default function NavigationScreen({
   route,
   navigation,
@@ -188,6 +219,7 @@ export default function NavigationScreen({
                   ? selectedRoute?.geojson?.features?.[0]?.geometry
                   : selectedRoute?.geojson?.geometry
               }
+              routeAnnotations={extractRouteAnnotations(mapboxRoute)}
               onError={handleNavigationError}
               onCancelNavigation={handleNavigationCancel}
               onArrive={handleNavigationArrive}

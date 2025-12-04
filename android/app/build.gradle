@@ -81,6 +81,9 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+
+        // Mapbox access token from gradle.properties
+        manifestPlaceholders = [MAPBOX_ACCESS_TOKEN: project.property('MAPBOX_PUBLIC_TOKEN')]
     }
     signingConfigs {
         debug {

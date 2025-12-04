@@ -12,9 +12,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
+import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import { TestCenterScreenProps } from '../types/navigation';
 import { useRoutesStore } from '../store/useRoutesStore';
+import { useSubscriptionStore } from '../store/useSubscriptionStore';
 
 export default function TestCenterScreen({
   route,
@@ -22,13 +25,68 @@ export default function TestCenterScreen({
 }: TestCenterScreenProps) {
   const { testCenterId } = route.params;
   const { routes, isLoading, error, fetchByTestCenter } = useRoutesStore();
+  const {
+    isSubscribed,
+    canAccessRoute,
+    markRouteAsFirstFree,
+    getFirstFreeRouteId,
+    checkSubscription,
+  } = useSubscriptionStore();
 
   useEffect(() => {
     fetchByTestCenter(testCenterId);
   }, [testCenterId]);
 
-  const handleRoutePress = (routeId: string) => {
-    navigation.navigate('RouteDetail', { routeId });
+  // Handle route press with subscription check
+  const handleRoutePress = async (routeId: string) => {
+    // Check if user can access this route
+    if (canAccessRoute(testCenterId, routeId)) {
+      // Mark as first free route if applicable (only tracks for non-subscribers)
+      await markRouteAsFirstFree(testCenterId, routeId);
+      navigation.navigate('RouteDetail', { routeId });
+    } else {
+      // Show paywall for premium routes
+      try {
+        const result = await RevenueCatUI.presentPaywallIfNeeded({
+          requiredEntitlementIdentifier: 'Test Routes Expert Unlimited',
+        });
+
+        // Check result and navigate if purchase/restore was successful
+        if (
+          result === PAYWALL_RESULT.PURCHASED ||
+          result === PAYWALL_RESULT.RESTORED
+        ) {
+          // Refresh subscription status
+          await checkSubscription();
+          // Now navigate to the route
+          navigation.navigate('RouteDetail', { routeId });
+        }
+        // CANCELLED, NOT_PRESENTED, ERROR - user didn't complete purchase
+      } catch (error: any) {
+        console.error('Paywall error:', error);
+        Alert.alert(
+          'Error',
+          'Unable to show subscription options. Please try again.',
+        );
+      }
+    }
+  };
+
+  // Check if a route is the free route for visual indicator
+  const isFirstFreeRoute = (routeId: string): boolean => {
+    if (isSubscribed) return false;
+    const freeRouteId = getFirstFreeRouteId(testCenterId);
+    // If no free route yet, the first one will be free
+    if (!freeRouteId) {
+      return routes.length > 0 && routes[0].id === routeId;
+    }
+    return freeRouteId === routeId;
+  };
+
+  // Check if route requires subscription
+  const requiresSubscription = (routeId: string): boolean => {
+    if (isSubscribed) return false;
+    return !canAccessRoute(testCenterId, routeId);
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -81,63 +139,87 @@ export default function TestCenterScreen({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Available Routes</Text>
-        <Text style={styles.headerSubtitle}>
-          {routes.length} {routes.length === 1 ? 'route' : 'routes'} available
-        </Text>
+        <View>
+          <Text style={styles.headerTitle}>Available Routes</Text>
+          <Text style={styles.headerSubtitle}>
+            {routes.length} {routes.length === 1 ? 'route' : 'routes'} available
+          </Text>
+        </View>
       </View>
 
       <FlatList
         data={routes}
         keyExtractor={item => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.routeCard}
-            onPress={() => handleRoutePress(item.id)}
-          >
-            <View style={styles.routeHeader}>
-              <View style={styles.routeNumberBadge}>
-                <Text style={styles.routeNumberText}>Route {item.route_number}</Text>
+        renderItem={({ item }) => {
+          const isFree = isFirstFreeRoute(item.id);
+          const isPremium = requiresSubscription(item.id);
+
+          return (
+            <TouchableOpacity
+              style={styles.routeCard}
+              onPress={() => handleRoutePress(item.id)}
+            >
+              <View style={styles.routeHeader}>
+                <View style={styles.routeNumberBadge}>
+                  <Text style={styles.routeNumberText}>Route {item.route_number}</Text>
+                </View>
+                <View style={styles.headerBadges}>
+                  {/* Free or Premium badge */}
+                  {!isSubscribed && (
+                    <View
+                      style={[
+                        styles.accessBadge,
+                        isFree ? styles.freeBadge : styles.premiumBadge,
+                      ]}
+                    >
+                      <Text style={styles.accessBadgeText}>
+                        {isFree ? 'FREE' : '🔒'}
+                      </Text>
+                    </View>
+                  )}
+                  <View
+                    style={[
+                      styles.difficultyBadge,
+                      { backgroundColor: getDifficultyColor(item.difficulty) + '20' },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.difficultyText,
+                        { color: getDifficultyColor(item.difficulty) },
+                      ]}
+                    >
+                      {item.difficulty}
+                    </Text>
+                  </View>
+                </View>
               </View>
-              <View
-                style={[
-                  styles.difficultyBadge,
-                  { backgroundColor: getDifficultyColor(item.difficulty) + '20' },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.difficultyText,
-                    { color: getDifficultyColor(item.difficulty) },
-                  ]}
-                >
-                  {item.difficulty}
+
+              <Text style={styles.routeName}>{item.name}</Text>
+
+              <View style={styles.routeStats}>
+                <View style={styles.stat}>
+                  <Text style={styles.statIcon}>📏</Text>
+                  <Text style={styles.statValue}>{item.distance_km} km</Text>
+                </View>
+                <View style={styles.stat}>
+                  <Text style={styles.statIcon}>⏱️</Text>
+                  <Text style={styles.statValue}>{item.estimated_duration_mins} mins</Text>
+                </View>
+                <View style={styles.stat}>
+                  <Text style={styles.statIcon}>📍</Text>
+                  <Text style={styles.statValue}>{item.point_count} points</Text>
+                </View>
+              </View>
+
+              <View style={[styles.viewButton, isPremium && styles.viewButtonPremium]}>
+                <Text style={[styles.viewButtonText, isPremium && styles.viewButtonTextPremium]}>
+                  {isPremium ? 'Unlock Route →' : 'View Route →'}
                 </Text>
               </View>
-            </View>
-
-            <Text style={styles.routeName}>{item.name}</Text>
-
-            <View style={styles.routeStats}>
-              <View style={styles.stat}>
-                <Text style={styles.statIcon}>📏</Text>
-                <Text style={styles.statValue}>{item.distance_km} km</Text>
-              </View>
-              <View style={styles.stat}>
-                <Text style={styles.statIcon}>⏱️</Text>
-                <Text style={styles.statValue}>{item.estimated_duration_mins} mins</Text>
-              </View>
-              <View style={styles.stat}>
-                <Text style={styles.statIcon}>📍</Text>
-                <Text style={styles.statValue}>{item.point_count} points</Text>
-              </View>
-            </View>
-
-            <View style={styles.viewButton}>
-              <Text style={styles.viewButtonText}>View Route →</Text>
-            </View>
-          </TouchableOpacity>
-        )}
+            </TouchableOpacity>
+          );
+        }}
         contentContainerStyle={styles.listContent}
       />
     </View>
@@ -203,6 +285,27 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#fff',
   },
+  headerBadges: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  accessBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  freeBadge: {
+    backgroundColor: '#dcfce7',
+  },
+  premiumBadge: {
+    backgroundColor: '#fef3c7',
+  },
+  accessBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#166534',
+  },
   difficultyBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -244,10 +347,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
   },
+  viewButtonPremium: {
+    backgroundColor: '#fef3c7',
+  },
   viewButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#2563eb',
+  },
+  viewButtonTextPremium: {
+    color: '#b45309',
   },
   loadingText: {
     marginTop: 12,

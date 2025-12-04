@@ -4,7 +4,7 @@
  * Displays list of test centers
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useLayoutEffect } from 'react';
 import {
   View,
   Text,
@@ -16,9 +16,25 @@ import {
 } from 'react-native';
 import { HomeScreenProps } from '../types/navigation';
 import { useTestCentersStore } from '../store/useTestCentersStore';
+import { useSubscriptionStore } from '../store/useSubscriptionStore';
 
 export default function HomeScreen({ navigation }: HomeScreenProps) {
   const { testCenters, isLoading, error, fetchAll } = useTestCentersStore();
+  const { isSubscribed } = useSubscriptionStore();
+
+  // Add settings button to header
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          style={styles.headerButton}
+          onPress={() => navigation.navigate('Settings')}
+        >
+          <Text style={styles.headerButtonText}>⚙️</Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   useEffect(() => {
     fetchAll();
@@ -105,6 +121,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f3f4f6',
+  },
+  headerButton: {
+    marginRight: 8,
+    padding: 8,
+  },
+  headerButtonText: {
+    fontSize: 22,
   },
   centerContainer: {
     flex: 1,

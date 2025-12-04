@@ -19,6 +19,7 @@ export type RootStackParamList = {
   Navigation: {
     routeId: string;
   };
+  Settings: undefined;
 };
 
 // Screen props types for each screen
@@ -26,3 +27,4 @@ export type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'Home'>
 export type TestCenterScreenProps = NativeStackScreenProps<RootStackParamList, 'TestCenter'>;
 export type RouteDetailScreenProps = NativeStackScreenProps<RootStackParamList, 'RouteDetail'>;
 export type NavigationScreenProps = NativeStackScreenProps<RootStackParamList, 'Navigation'>;
+export type SettingsScreenProps = NativeStackScreenProps<RootStackParamList, 'Settings'>;

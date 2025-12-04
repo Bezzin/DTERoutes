@@ -83,12 +83,13 @@ Native Modules:
 
 ### Environment Variables (.env)
 ```bash
-MAPBOX_PUBLIC_TOKEN=pk.eyJ1IjoiYmV6emluIiwiYSI6ImNtaWYxN2Z6ejA4Y3AzZnM5ZXdraTBubDcifQ.vsINfDUNhqrgJyRf9RU12g
+MAPBOX_PUBLIC_TOKEN=<your-mapbox-public-token>
 ```
 
 ### Android (android/gradle.properties)
 ```properties
-MAPBOX_DOWNLOADS_TOKEN=sk.eyJ1IjoiYmV6emluIiwiYSI6ImNtaWYxamZ6ZTA3cmwzZ3M3Y3ZlcTJhM3AifQ.FnfQP3tDshUsxrrFrgJA8g
+MAPBOX_DOWNLOADS_TOKEN=<your-mapbox-secret-token>
+MAPBOX_PUBLIC_TOKEN=<your-mapbox-public-token>
 ```
 
 ### Android (android/app/src/main/AndroidManifest.xml)
@@ -97,9 +98,10 @@ MAPBOX_DOWNLOADS_TOKEN=sk.eyJ1IjoiYmV6emluIiwiYSI6ImNtaWYxamZ6ZTA3cmwzZ3M3Y3ZlcT
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
+<!-- Token is now provided via manifest placeholder from gradle.properties -->
 <meta-data
     android:name="MAPBOX_ACCESS_TOKEN"
-    android:value="pk.eyJ1IjoiYmV6emluIiwiYSI6ImNtaWYxN2Z6ejA4Y3AzZnM5ZXdraTBubDcifQ.vsINfDUNhqrgJyRf9RU12g" />
+    android:value="${MAPBOX_ACCESS_TOKEN}" />
 ```
 
 ### iOS (ios/TestRoutesExpert/Info.plist)
@@ -225,21 +227,37 @@ Your test route is **fully processed and ready**:
 ## 🔜 Future Enhancements
 
 ### Priority 1 (Core Features)
-- [ ] Native re-routing disable (fork navigation package)
-- [ ] Upload more test routes
+- [x] ~~Native re-routing disable (fork navigation package)~~ - User decided current MVP implementation is sufficient
+- [x] ~~Upload more test routes~~ - All routes for Newcastle, Cobridge, and Stafford added
 - [ ] Route recording from app
 
-### Priority 2 (UX Improvements)
-- [ ] Offline map caching
+### Priority 2 (UX Improvements) - ✅ COMPLETED
+- [x] **Offline map caching** - Download maps for offline navigation
 - [ ] Night mode for navigation
-- [ ] Speed limit warnings
+- [x] **Speed limit warnings** - Real-time speed monitoring with warnings
 - [ ] Practice mode statistics
 
 ### Priority 3 (Nice-to-Have)
-- [ ] Multiple test centers
+- [x] ~~Multiple test centers~~ - Already implemented (Newcastle, Cobridge, Stafford)
 - [ ] Favorite routes
 - [ ] Share routes with friends
 - [ ] Route difficulty ratings from users
+
+---
+
+## 📦 New Features Added (Dec 2024)
+
+### Speed Limit Warnings
+- UK-style speed limit sign display
+- Real-time GPS speed monitoring
+- Visual warnings when exceeding limit
+- See `docs/OFFLINE_MAPS_SPEED_LIMITS.md` for details
+
+### Offline Map Caching
+- Download maps for each test center region
+- Works without internet connection
+- ~120 MB total for all 3 regions
+- See `docs/OFFLINE_MAPS_SPEED_LIMITS.md` for details
 
 ---
 

@@ -14,6 +14,7 @@ import HomeScreen from '../screens/HomeScreen';
 import TestCenterScreen from '../screens/TestCenterScreen';
 import RouteDetailScreen from '../screens/RouteDetailScreen';
 import NavigationScreen from '../screens/NavigationScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -59,6 +60,13 @@ export default function AppNavigator() {
           options={{
             title: 'Navigation',
             headerShown: false, // Hide header during navigation
+          }}
+        />
+        <Stack.Screen
+          name="Settings"
+          component={SettingsScreen}
+          options={{
+            title: 'Settings',
           }}
         />
       </Stack.Navigator>
