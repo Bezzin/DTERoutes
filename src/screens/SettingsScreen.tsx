@@ -13,12 +13,20 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import RevenueCatUI from 'react-native-purchases-ui';
 import { useSubscriptionStore } from '../store/useSubscriptionStore';
 import { restorePurchases } from '../services/revenuecat';
 import { SettingsScreenProps } from '../types/navigation';
+
+// Compliance URLs
+const PRIVACY_POLICY_URL = 'https://destiny-date-598.notion.site/Privacy-Policy-Test-Routes-Expert-2c04994b32ba8119ada3c1e7911d4398';
+const TERMS_OF_SERVICE_URL = 'https://destiny-date-598.notion.site/Terms-of-Service-Test-Routes-Expert-2c04994b32ba81eea41cd2f9fab3e12e';
+const SUPPORT_EMAIL = 'support@drivingtestexpert.com';
+const APP_VERSION = '0.0.1';
 
 export default function SettingsScreen({ navigation }: SettingsScreenProps) {
   const [isRestoring, setIsRestoring] = useState(false);
@@ -66,6 +74,29 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
     } finally {
       setIsRestoring(false);
     }
+  };
+
+  // Delete all local app data
+  const handleDeleteData = () => {
+    Alert.alert(
+      'Delete My Data',
+      'This will delete all your local app data including saved preferences and free route selections. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await AsyncStorage.clear();
+              Alert.alert('Success', 'Your data has been deleted.');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete data. Please try again.');
+            }
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -158,11 +189,52 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
           </View>
         </View>
 
-        {/* App Info */}
+        {/* Legal & Support */}
         <View style={styles.card}>
+          <Text style={styles.cardTitle}>Legal & Support</Text>
+
+          <TouchableOpacity
+            style={styles.linkRow}
+            onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
+          >
+            <Text style={styles.linkText}>Privacy Policy</Text>
+            <Text style={styles.linkArrow}>→</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.linkRow}
+            onPress={() => Linking.openURL(TERMS_OF_SERVICE_URL)}
+          >
+            <Text style={styles.linkText}>Terms of Service</Text>
+            <Text style={styles.linkArrow}>→</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.linkRow, styles.linkRowLast]}
+            onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`)}
+          >
+            <Text style={styles.linkText}>Contact Support</Text>
+            <Text style={styles.linkArrow}>→</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Data & Privacy */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Data & Privacy</Text>
+          <TouchableOpacity
+            style={[styles.button, styles.dangerButton]}
+            onPress={handleDeleteData}
+          >
+            <Text style={styles.dangerButtonText}>Delete My Data</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* App Info */}
+        <View style={[styles.card, styles.cardLast]}>
           <Text style={styles.cardTitle}>About</Text>
           <Text style={styles.infoText}>Test Routes Expert</Text>
           <Text style={styles.infoSubtext}>UK Driving Test Routes Navigation App</Text>
+          <Text style={styles.versionText}>Version {APP_VERSION}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -315,5 +387,43 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#64748b',
     marginTop: 4,
+  },
+  versionText: {
+    fontSize: 12,
+    color: '#94a3b8',
+    marginTop: 8,
+  },
+  cardLast: {
+    marginBottom: 24,
+  },
+  linkRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  linkRowLast: {
+    borderBottomWidth: 0,
+  },
+  linkText: {
+    fontSize: 16,
+    color: '#1e293b',
+  },
+  linkArrow: {
+    fontSize: 16,
+    color: '#94a3b8',
+  },
+  dangerButton: {
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+    marginBottom: 0,
+  },
+  dangerButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#dc2626',
   },
 });
