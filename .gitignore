@@ -1,0 +1,87 @@
+# Windows reserved names
+nul
+**/nul
+
+# Node modules
+node_modules/
+**/node_modules/
+
+# Build outputs
+build/
+**/build/
+*.build/
+dist/
+**/dist/
+
+# OSX
+.DS_Store
+
+# Xcode
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata
+*.xccheckout
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+*.xcuserstate
+ios/.xcode.env.local
+
+# Android/IntelliJ
+.idea
+.gradle
+local.properties
+*.iml
+*.hprof
+.cxx/
+*.keystore
+!debug.keystore
+
+# Logs
+npm-debug.log
+yarn-error.log
+*.log
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Testing
+coverage/
+**/coverage/
+
+# Ruby / CocoaPods
+/ios/Pods/
+/vendor/bundle/
+
+# Metro
+.metro-health-check*
+
+# Bundle artifact
+*.jsbundle
+
+# Fastlane
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots
+**/fastlane/test_output
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+
