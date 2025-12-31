@@ -1,4 +1,4 @@
-package com.testroutesexpert
+package com.drivingtestexpert.testroutesexpert
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

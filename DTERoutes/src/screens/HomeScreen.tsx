@@ -179,8 +179,8 @@ export default function HomeScreen({navigation}: HomeScreenProps) {
             <TestCentreCard
               id={item.id}
               name={item.name}
-              city={item.city}
-              address={item.address}
+              city={item.city ?? undefined}
+              address={item.address ?? undefined}
               routeCount={item.route_count}
               latitude={item.latitude}
               longitude={item.longitude}

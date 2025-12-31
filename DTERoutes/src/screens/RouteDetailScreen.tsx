@@ -96,15 +96,6 @@ export default function RouteDetailScreen({
               ? selectedRoute.geojson?.features?.[0]?.geometry
               : selectedRoute.geojson?.geometry
           }
-          centerCoordinate={
-            // Handle FeatureCollection structure
-            (selectedRoute.geojson?.type === 'FeatureCollection'
-              ? selectedRoute.geojson?.features?.[0]?.geometry?.coordinates?.[0]
-              : selectedRoute.geojson?.geometry?.coordinates?.[0]) as [
-              number,
-              number,
-            ]
-          }
         />
 
         {/* Route Info Card */}

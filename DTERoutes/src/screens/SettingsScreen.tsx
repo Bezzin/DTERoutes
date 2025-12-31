@@ -27,12 +27,10 @@ import {DarkCard, OrangeButton, ToggleSwitch} from '../components/common';
 import {Colors, Typography, Spacing, BorderRadius} from '../theme';
 
 // Compliance URLs
-const PRIVACY_POLICY_URL =
-  'https://destiny-date-598.notion.site/Privacy-Policy-Test-Routes-Expert-2c04994b32ba8119ada3c1e7911d4398';
-const TERMS_OF_SERVICE_URL =
-  'https://destiny-date-598.notion.site/Terms-of-Service-Test-Routes-Expert-2c04994b32ba81eea41cd2f9fab3e12e';
+const PRIVACY_POLICY_URL = 'https://www.drivingtestexpert.com/privacy-policy';
+const TERMS_OF_SERVICE_URL = 'https://www.drivingtestexpert.com/terms-of-service';
 const SUPPORT_EMAIL = 'support@drivingtestexpert.com';
-const APP_VERSION = '0.0.1';
+const APP_VERSION = '1.0.0';
 
 // Icon Components
 function UserIcon() {
@@ -343,12 +341,6 @@ export default function SettingsScreen({
               description="Full voice-guided navigation for all routes"
               isAvailable={isSubscribed}
             />
-            <View style={styles.featureDivider} />
-            <FeatureItem
-              title="Offline Maps"
-              description="Download routes for offline use"
-              isAvailable={isSubscribed}
-            />
           </DarkCard>
         </View>
 
@@ -402,6 +394,14 @@ export default function SettingsScreen({
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>Data & Privacy</Text>
           <DarkCard>
+            <Text style={styles.dataDisclosureText}>
+              We use Mapbox for navigation, which processes your location to
+              calculate routes and collects anonymized telemetry. We use
+              RevenueCat to manage purchases, which processes transaction data
+              as required by Google Play. For data deletion requests or privacy
+              questions, contact {SUPPORT_EMAIL}.
+            </Text>
+            <View style={styles.dataDisclosureDivider} />
             <TouchableOpacity
               style={styles.dangerButton}
               onPress={handleDeleteData}>
@@ -645,5 +645,16 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: Spacing.xxl,
+  },
+  dataDisclosureText: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    lineHeight: 18,
+    marginBottom: Spacing.md,
+  },
+  dataDisclosureDivider: {
+    height: 1,
+    backgroundColor: Colors.border,
+    marginBottom: Spacing.md,
   },
 });

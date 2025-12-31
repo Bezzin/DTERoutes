@@ -7,7 +7,7 @@
  * Users must follow the exact test route path.
  */
 
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -16,10 +16,13 @@ import {
   ActivityIndicator,
   Alert,
   SafeAreaView,
+  Platform,
+  PermissionsAndroid,
 } from 'react-native';
 import {NavigationScreenProps} from '../types/navigation';
 import {useRoutesStore} from '../store/useRoutesStore';
 import NavigationView from '../components/NavigationView';
+import LocationPermissionModal from '../components/LocationPermissionModal';
 
 /**
  * Extract speed limit annotations from Mapbox route data
@@ -57,13 +60,74 @@ export default function NavigationScreen({
   navigation,
 }: NavigationScreenProps) {
   const {routeId} = route.params;
-  const {selectedRoute, isLoading, fetchById} = useRoutesStore();
+  const {selectedRoute, isLoading, fetchById, markRouteCompleted} = useRoutesStore();
+
+  // Permission state
+  const [hasLocationPermission, setHasLocationPermission] = useState<boolean | null>(null);
+  const [showPermissionModal, setShowPermissionModal] = useState(false);
+
+  // Check permission status on mount
+  useEffect(() => {
+    const checkPermission = async () => {
+      if (Platform.OS === 'android') {
+        // Check location permission
+        const locationGranted = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        );
+
+        if (!locationGranted) {
+          setShowPermissionModal(true);
+          return;
+        }
+
+        // Check notification permission on Android 13+
+        const apiLevel = Platform.Version;
+        if (apiLevel >= 33) {
+          const notificationGranted = await PermissionsAndroid.check(
+            PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+          );
+
+          if (!notificationGranted) {
+            setShowPermissionModal(true);
+            return;
+          }
+        }
+
+        // All required permissions granted
+        setHasLocationPermission(true);
+      } else {
+        // iOS - assume granted (handled via Info.plist)
+        setHasLocationPermission(true);
+      }
+    };
+    checkPermission();
+  }, []);
 
   useEffect(() => {
     if (!selectedRoute || selectedRoute.id !== routeId) {
       fetchById(routeId);
     }
   }, [routeId, fetchById, selectedRoute]);
+
+  const handlePermissionGranted = () => {
+    setShowPermissionModal(false);
+    setHasLocationPermission(true);
+  };
+
+  const handlePermissionDenied = () => {
+    setShowPermissionModal(false);
+    setHasLocationPermission(false);
+    Alert.alert(
+      'Location Required',
+      'Navigation requires location access to work. Please enable location in your device settings to use this feature.',
+      [
+        {
+          text: 'Go Back',
+          onPress: () => navigation.goBack(),
+        },
+      ],
+    );
+  };
 
   const handleEndNavigation = () => {
     Alert.alert(
@@ -82,11 +146,32 @@ export default function NavigationScreen({
     );
   };
 
-  if (isLoading || !selectedRoute) {
+  // Show permission modal if needed
+  if (showPermissionModal) {
+    return (
+      <LocationPermissionModal
+        visible={showPermissionModal}
+        onPermissionGranted={handlePermissionGranted}
+        onPermissionDenied={handlePermissionDenied}
+      />
+    );
+  }
+
+  // Show loading while checking permission or loading route
+  if (isLoading || !selectedRoute || hasLocationPermission === null) {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color="#fff" />
         <Text style={styles.loadingText}>Loading navigation...</Text>
+      </View>
+    );
+  }
+
+  // Permission denied - this shouldn't normally show as we handle it above
+  if (hasLocationPermission === false) {
+    return (
+      <View style={styles.centerContainer}>
+        <Text style={styles.loadingText}>Location permission required</Text>
       </View>
     );
   }
@@ -141,6 +226,11 @@ export default function NavigationScreen({
   };
 
   const handleNavigationArrive = () => {
+    // Mark route as completed
+    if (selectedRoute) {
+      markRouteCompleted(selectedRoute.test_center_id, selectedRoute.id);
+    }
+
     Alert.alert('Route Complete!', 'You have arrived at the destination.', [
       {
         text: 'OK',

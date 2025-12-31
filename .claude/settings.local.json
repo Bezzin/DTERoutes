@@ -56,7 +56,10 @@
       "Bash(powershell.exe -Command \"Get-Process -Name node -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Seconds 2; cd ''C:\\Users\\Nathaniel\\Documents\\DTEwithphonelocationontest\\DTERoutes''; npx react-native start --reset-cache\")",
       "Bash(powershell.exe -Command \"cd ''C:\\Users\\Nathaniel\\Documents\\DTEwithphonelocationontest\\DTERoutes''; npm install react-native-worklets\")",
       "Bash(powershell.exe -Command \"cd ''C:\\Users\\Nathaniel\\Documents\\DTEwithphonelocationontest\\DTERoutes''; npm list react-native-reanimated react-native-worklets --depth=0\")",
-      "Bash(powershell.exe:*)"
+      "Bash(powershell.exe:*)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(C:UsersNathanielAppDataLocalAndroidSdkplatform-toolsadb.exe reverse tcp:8081 tcp:8081)",
+      "WebFetch(domain:www.netlify.com)"
     ],
     "deny": [],
     "ask": []

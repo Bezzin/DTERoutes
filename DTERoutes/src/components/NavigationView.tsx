@@ -160,7 +160,7 @@ export default function NavigationView({
 
   const handleLocationChange = (event: any) => {
     // Track user location during navigation
-    if (event?.nativeEvent) {
+    if (__DEV__ && event?.nativeEvent) {
       console.log(
         'Location:',
         event.nativeEvent?.latitude,
@@ -196,9 +196,9 @@ export default function NavigationView({
   };
 
   const handleSpeedUpdate = (speed: number, isOverLimit: boolean) => {
-    if (isOverLimit) {
+    if (__DEV__ && isOverLimit) {
       console.log(
-        `⚠️ Speed warning: ${speed.toFixed(0)} mph (limit: ${
+        `Speed warning: ${speed.toFixed(0)} mph (limit: ${
           currentSpeedLimit ? Math.round(currentSpeedLimit * 0.621371) : '?'
         } mph)`,
       );
@@ -251,11 +251,11 @@ export default function NavigationView({
 
     if (isIntermediateWaypoint) {
       // Reached an intermediate waypoint - log but don't show completion
-      console.log(
-        `Reached waypoint ${newCount} of ${totalWaypointsRef.current}. Continuing to next waypoint...`,
-      );
-      // Optionally show a brief notification (commented out to avoid disrupting navigation)
-      // Alert.alert('Waypoint Reached', `Waypoint ${newCount} of ${totalWaypointsRef.current}`, [{ text: 'Continue' }]);
+      if (__DEV__) {
+        console.log(
+          `Reached waypoint ${newCount} of ${totalWaypointsRef.current}. Continuing to next waypoint...`,
+        );
+      }
     } else {
       // Reached final destination - show completion message
       Alert.alert(

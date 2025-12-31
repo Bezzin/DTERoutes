@@ -220,7 +220,6 @@ export default function PaywallScreen({navigation}: any) {
   const benefits = [
     '500+ Verified Test Routes',
     'Turn-by-Turn GPS Navigation',
-    'Offline Mode & Practice anywhere',
   ];
 
   const isLifetime = selectedPlan === 'lifetime';
@@ -342,7 +341,7 @@ export default function PaywallScreen({navigation}: any) {
               <Text style={styles.disclaimerText}>
                 {isLifetime
                   ? 'One-time purchase. No recurring charges. Terms apply.'
-                  : 'Subscription auto-renews. Cancel anytime. Terms apply.'}
+                  : 'Subscription auto-renews monthly until cancelled. Manage or cancel anytime in Google Play subscriptions. Terms apply.'}
               </Text>
             </Animated.View>
           </ScrollView>

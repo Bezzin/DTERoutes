@@ -26,6 +26,8 @@ export interface TestCenter {
   address: string | null;
   city: string | null;
   postcode: string | null;
+  latitude?: number;
+  longitude?: number;
   route_count: number;
   created_at: string;
 }

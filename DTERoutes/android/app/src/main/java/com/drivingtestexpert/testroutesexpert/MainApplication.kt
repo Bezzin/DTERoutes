@@ -1,4 +1,4 @@
-package com.testroutesexpert
+package com.drivingtestexpert.testroutesexpert
 
 import android.app.Application
 import com.facebook.react.PackageList

@@ -6,14 +6,7 @@
  */
 
 import React, {useEffect, useState, useRef} from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  Animated,
-  Platform,
-  PermissionsAndroid,
-} from 'react-native';
+import {StyleSheet, View, Text, Animated} from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
 
 interface SpeedLimitDisplayProps {
@@ -31,7 +24,6 @@ export default function SpeedLimitDisplay({
 }: SpeedLimitDisplayProps) {
   const [currentSpeed, setCurrentSpeed] = useState<number>(0);
   const [isOverLimit, setIsOverLimit] = useState(false);
-  const [hasLocationPermission, setHasLocationPermission] = useState(false);
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const watchId = useRef<number | null>(null);
 
@@ -42,42 +34,9 @@ export default function SpeedLimitDisplay({
       : currentSpeedLimit
     : null;
 
-  // Request location permission
-  useEffect(() => {
-    const requestPermission = async () => {
-      if (Platform.OS === 'android') {
-        try {
-          const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-            {
-              title: 'Location Permission',
-              message: 'App needs access to your location for speed monitoring',
-              buttonNeutral: 'Ask Me Later',
-              buttonNegative: 'Cancel',
-              buttonPositive: 'OK',
-            },
-          );
-          setHasLocationPermission(
-            granted === PermissionsAndroid.RESULTS.GRANTED,
-          );
-        } catch (err) {
-          console.warn(err);
-        }
-      } else {
-        // iOS handles permission in Info.plist
-        setHasLocationPermission(true);
-      }
-    };
-
-    requestPermission();
-  }, []);
-
   // Start watching GPS speed
+  // Note: Permission is handled by NavigationScreen before this component mounts
   useEffect(() => {
-    if (!hasLocationPermission) {
-      return;
-    }
-
     watchId.current = Geolocation.watchPosition(
       position => {
         // Speed from GPS is in m/s
@@ -115,13 +74,7 @@ export default function SpeedLimitDisplay({
         Geolocation.clearWatch(watchId.current);
       }
     };
-  }, [
-    hasLocationPermission,
-    displaySpeedLimit,
-    unit,
-    warningThreshold,
-    onSpeedUpdate,
-  ]);
+  }, [displaySpeedLimit, unit, warningThreshold, onSpeedUpdate]);
 
   // Pulse animation when over limit
   useEffect(() => {

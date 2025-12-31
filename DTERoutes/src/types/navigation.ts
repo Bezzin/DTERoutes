@@ -57,19 +57,3 @@ export type PaywallScreenProps = NativeStackScreenProps<
   RootStackParamList,
   'Paywall'
 >;
-export type TestCenterScreenProps = NativeStackScreenProps<
-  RootStackParamList,
-  'TestCenter'
->;
-export type RouteDetailScreenProps = NativeStackScreenProps<
-  RootStackParamList,
-  'RouteDetail'
->;
-export type NavigationScreenProps = NativeStackScreenProps<
-  RootStackParamList,
-  'Navigation'
->;
-export type SettingsScreenProps = NativeStackScreenProps<
-  RootStackParamList,
-  'Settings'
->;
