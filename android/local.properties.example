@@ -1,0 +1,8 @@
+# Local properties template - copy this to local.properties and fill in your values
+# DO NOT commit local.properties to git
+
+# Android SDK location (usually auto-set by Android Studio)
+# sdk.dir=C:\\Users\\YourName\\AppData\\Local\\Android\\Sdk
+
+# Mapbox Downloads Token (secret - get from https://account.mapbox.com/access-tokens/)
+MAPBOX_DOWNLOADS_TOKEN=sk.your_secret_token_here
