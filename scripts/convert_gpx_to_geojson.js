@@ -122,6 +122,10 @@ async function convertGpxToGeoJSON(gpxPath) {
   }
 
   console.log(`  📊 Found ${waypoints.length} ${sourceType}`);
+  }
+
+  console.log(`  📊 Found ${waypoints.length} waypoints`);
+>>>>>>> origin/ios-dev
 
   // Convert waypoints to GeoJSON coordinates [lon, lat]
   const coordinates = waypoints.map(wpt => {

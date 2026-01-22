@@ -42,7 +42,6 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 
 // Initialize Supabase client
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 const SCRIPTS_DIR = __dirname;
 const TEMP_DIR = path.join(SCRIPTS_DIR, 'temp_processing');
 const ERROR_LOG_FILE = path.join(SCRIPTS_DIR, 'processing_errors.log');
@@ -107,6 +106,8 @@ async function buildTestCentreConfig() {
 }
 
 /**
+=======
+>>>>>>> origin/ios-dev
  * Add or update a test centre in the database
  */
 async function addTestCentre(config) {
