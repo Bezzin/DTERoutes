@@ -78,6 +78,10 @@ function parseRouteName(filename) {
 
 /**
  * Parse GPX file and convert to GeoJSON
+ * Supports multiple GPX formats:
+ * - <wpt> waypoints (direct children of gpx)
+ * - <rtept> route points (inside <rte> elements)
+ * - <trkpt> track points (inside <trk>/<trkseg> elements)
  */
 async function convertGpxToGeoJSON(gpxPath) {
   console.log(`\n📍 Converting: ${path.basename(gpxPath)}`);
@@ -90,14 +94,34 @@ async function convertGpxToGeoJSON(gpxPath) {
   const parser = new xml2js.Parser();
   const result = await parser.parseStringPromise(gpxContent);
 
-  // Extract waypoints
-  const waypoints = result.gpx.wpt;
+  // Extract waypoints from various GPX formats
+  let waypoints = [];
+  let sourceType = '';
 
-  if (!waypoints || waypoints.length === 0) {
-    throw new Error('No waypoints found in GPX file');
+  // Try waypoints (wpt)
+  if (result.gpx.wpt && result.gpx.wpt.length > 0) {
+    waypoints = result.gpx.wpt;
+    sourceType = 'waypoints (wpt)';
+  }
+  // Try route points (rtept inside rte)
+  else if (result.gpx.rte && result.gpx.rte.length > 0 && result.gpx.rte[0].rtept) {
+    waypoints = result.gpx.rte[0].rtept;
+    sourceType = 'route points (rtept)';
+  }
+  // Try track points (trkpt inside trk/trkseg)
+  else if (result.gpx.trk && result.gpx.trk.length > 0) {
+    const trk = result.gpx.trk[0];
+    if (trk.trkseg && trk.trkseg.length > 0 && trk.trkseg[0].trkpt) {
+      waypoints = trk.trkseg[0].trkpt;
+      sourceType = 'track points (trkpt)';
+    }
   }
 
-  console.log(`  📊 Found ${waypoints.length} waypoints`);
+  if (!waypoints || waypoints.length === 0) {
+    throw new Error('No waypoints found in GPX file (tried wpt, rtept, trkpt)');
+  }
+
+  console.log(`  📊 Found ${waypoints.length} ${sourceType}`);
 
   // Convert waypoints to GeoJSON coordinates [lon, lat]
   const coordinates = waypoints.map(wpt => {

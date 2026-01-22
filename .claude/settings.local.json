@@ -59,7 +59,20 @@
       "Bash(powershell.exe:*)",
       "Bash(npx tsc --noEmit)",
       "Bash(C:UsersNathanielAppDataLocalAndroidSdkplatform-toolsadb.exe reverse tcp:8081 tcp:8081)",
-      "WebFetch(domain:www.netlify.com)"
+      "WebFetch(domain:www.netlify.com)",
+      "WebFetch(domain:docs.mapbox.com)",
+      "Bash(node -e:*)",
+      "Bash(ls:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nsecurity: Move Mapbox secret token and keystore credentials to local.properties\n\nRemoves leaked MAPBOX_DOWNLOADS_TOKEN from version control and moves it\nto local.properties \\(gitignored\\). Also moves keystore signing credentials.\nAdded local.properties.example templates for developer setup.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push)",
+      "Bash(git push:*)",
+      "Bash(git log:*)",
+      "Bash(git rev-list:*)",
+      "Bash(gh api:*)",
+      "mcp__filesystem__list_directory",
+      "mcp__filesystem__read_text_file",
+      "mcp__filesystem__directory_tree"
     ],
     "deny": [],
     "ask": []

@@ -8,8 +8,18 @@ import {createClient} from '@supabase/supabase-js';
 import {SUPABASE_URL, SUPABASE_ANON_KEY} from '@env';
 import 'react-native-url-polyfill/auto';
 
+// Fallback values for when env vars aren't bundled correctly
+// These are public/anon keys - safe to include in client code
+const FALLBACK_SUPABASE_URL = 'https://zpfkvhnfbbimsfghmjiz.supabase.co';
+const FALLBACK_SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpwZmt2aG5mYmJpbXNmZ2htaml6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwODkyOTEsImV4cCI6MjA3OTY2NTI5MX0.NsNYUGGZojVzBkryERIe6Qz_Km6AdZQQfhl6nElgmkw';
+
+// Use env vars if available, otherwise use fallbacks
+const supabaseUrl = SUPABASE_URL || FALLBACK_SUPABASE_URL;
+const supabaseAnonKey = SUPABASE_ANON_KEY || FALLBACK_SUPABASE_ANON_KEY;
+
 // Initialize Supabase client
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false,

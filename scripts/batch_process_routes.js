@@ -26,9 +26,11 @@ const { createClient } = require('@supabase/supabase-js');
 const { convertGpxToGeoJSON } = require('./convert_gpx_to_geojson');
 const { processRoute } = require('./process_routes');
 const { seedRoute } = require('./seed_database');
+const { discoverTestCentres } = require('./auto_discover');
+const { geocodeTestCentre } = require('./geocode_test_centre');
 
 // Load environment variables
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
+require('dotenv').config({ path: path.join(__dirname, '../DTERoutes/.env') });
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
@@ -40,34 +42,6 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 
 // Initialize Supabase client
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// Test centre configuration
-const TEST_CENTRE_CONFIG = {
-  'Stoke-on-Trent-Newcastle-Under-Lyme-Driving-Test-Centre-Routes-peigpf': {
-    id: 'stoke-on-trent-newcastle-under-lyme',
-    name: 'Stoke-on-Trent (Newcastle-Under-Lyme) Driving Test Centre',
-    city: 'Stoke-on-Trent',
-    postcode: 'ST5 1HQ',
-    location: { lat: 52.99598, lon: -2.21258 },
-    skip_test_centre_creation: true // Already exists in database
-  },
-  'Stoke-On-Trent-Cobridge-Driving-Test-Centre-Routes-jnqhhb': {
-    id: 'stoke-on-trent-cobridge',
-    name: 'Stoke-On-Trent (Cobridge) Driving Test Centre',
-    city: 'Stoke-on-Trent',
-    postcode: 'ST6 2DL',
-    location: { lat: 53.040465, lon: -2.18805 },
-    skip_test_centre_creation: false
-  },
-  'Stafford-Driving-Test-Centre-Routes-pejcw9': {
-    id: 'stafford',
-    name: 'Stafford Driving Test Centre',
-    city: 'Stafford',
-    postcode: 'ST16 1PS',
-    location: { lat: 52.813429, lon: -2.125272 },
-    skip_test_centre_creation: false
-  }
-};
 
 const SCRIPTS_DIR = __dirname;
 const TEMP_DIR = path.join(SCRIPTS_DIR, 'temp_processing');
@@ -87,6 +61,49 @@ fs.writeFileSync(ERROR_LOG_FILE, `Batch Processing Error Log - ${new Date().toIS
 function logError(message) {
   const timestamp = new Date().toISOString();
   fs.appendFileSync(ERROR_LOG_FILE, `[${timestamp}] ${message}\n\n`);
+}
+
+/**
+ * Build test centre configuration dynamically by discovering folders and geocoding
+ */
+async function buildTestCentreConfig() {
+  console.log('\n🔍 Auto-discovering test centre folders...');
+
+  const discovered = await discoverTestCentres(__dirname);
+  console.log(`   Found ${discovered.length} test centre folders\n`);
+
+  if (discovered.length === 0) {
+    console.warn('⚠️  No test centre folders found!');
+    return {};
+  }
+
+  const config = {};
+
+  for (let i = 0; i < discovered.length; i++) {
+    const centre = discovered[i];
+    console.log(`   [${i + 1}/${discovered.length}] Geocoding "${centre.name}"...`);
+
+    try {
+      const geo = await geocodeTestCentre(centre.name);
+
+      config[centre.folderName] = {
+        id: centre.id,
+        name: centre.name,
+        city: geo.city,
+        postcode: geo.postcode,
+        location: { lat: geo.latitude, lon: geo.longitude },
+        skip_test_centre_creation: false
+      };
+
+      console.log(`       ✓ ${geo.city || 'UK'} (${geo.latitude.toFixed(4)}, ${geo.longitude.toFixed(4)})`);
+    } catch (error) {
+      console.error(`       ✗ Failed to geocode: ${error.message}`);
+      logError(`Failed to geocode ${centre.name}: ${error.message}`);
+    }
+  }
+
+  console.log(`\n   ✅ Configuration built for ${Object.keys(config).length} test centres\n`);
+  return config;
 }
 
 /**
@@ -286,6 +303,15 @@ async function main() {
   console.log(`Error log: ${ERROR_LOG_FILE}`);
 
   const startTime = Date.now();
+
+  // Build test centre configuration dynamically
+  const TEST_CENTRE_CONFIG = await buildTestCentreConfig();
+
+  if (Object.keys(TEST_CENTRE_CONFIG).length === 0) {
+    console.log('\n⚠️  No test centres to process. Exiting.\n');
+    return;
+  }
+
   const results = {};
 
   // Process each test centre

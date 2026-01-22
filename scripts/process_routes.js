@@ -23,7 +23,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Load environment variables
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
+require('dotenv').config({ path: path.join(__dirname, '../DTERoutes/.env') });
 
 const MAPBOX_ACCESS_TOKEN = process.env.MAPBOX_PUBLIC_TOKEN;
 const CHUNK_SIZE = 100; // Mapbox Map Matching API limit

@@ -1,3 +1,10 @@
-Batch Processing Error Log - 2025-12-01T20:37:03.818Z
+Batch Processing Error Log - 2026-01-07T20:31:17.532Z
 ============================================================
+
+[2026-01-07T20:33:02.744Z] ipswich-driving-test-centre-routes - Ipswich_Driving_Test_Centre_Route_1.gpx: Could not extract route number from filename: Ipswich_Driving_Test_Centre_Route_1.gpx
+Error: Could not extract route number from filename: Ipswich_Driving_Test_Centre_Route_1.gpx
+    at processGpxFile (C:\Users\Nathaniel\Documents\DTEwithphonelocationontest\scripts\batch_process_routes.js:178:11)
+    at processTestCentre (C:\Users\Nathaniel\Documents\DTEwithphonelocationontest\scripts\batch_process_routes.js:267:28)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async main (C:\Users\Nathaniel\Documents\DTEwithphonelocationontest\scripts\batch_process_routes.js:327:28)
 

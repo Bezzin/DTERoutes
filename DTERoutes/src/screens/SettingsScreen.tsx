@@ -27,8 +27,10 @@ import {DarkCard, OrangeButton, ToggleSwitch} from '../components/common';
 import {Colors, Typography, Spacing, BorderRadius} from '../theme';
 
 // Compliance URLs
-const PRIVACY_POLICY_URL = 'https://www.drivingtestexpert.com/privacy-policy';
-const TERMS_OF_SERVICE_URL = 'https://www.drivingtestexpert.com/terms-of-service';
+const PRIVACY_POLICY_URL =
+  'https://destiny-date-598.notion.site/Privacy-Policy-Test-Routes-Expert-2c04994b32ba8119ada3c1e7911d4398';
+const TERMS_OF_SERVICE_URL =
+  'https://destiny-date-598.notion.site/Terms-of-Service-Test-Routes-Expert-2c04994b32ba81eea41cd2f9fab3e12e';
 const SUPPORT_EMAIL = 'support@drivingtestexpert.com';
 const APP_VERSION = '1.0.0';
 
