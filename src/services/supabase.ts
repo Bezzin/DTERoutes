@@ -49,6 +49,28 @@ export interface RouteWithTestCenter extends Route {
   test_center: TestCenter;
 }
 
+// Feedback types
+export type FeedbackType = 'bug' | 'missing_content' | 'suggestion';
+
+// Route request for "Hot Spot" tracking
+export interface RouteRequest {
+  id: string;
+  test_center_id: string;
+  device_id: string;
+  user_id: string | null;
+  created_at: string;
+}
+
+// User feedback for internal issue collection
+export interface UserFeedback {
+  id: string;
+  device_id: string;
+  feedback_type: FeedbackType;
+  test_center_name: string | null;
+  message: string;
+  created_at: string;
+}
+
 // ============================================
 // Test Centers API
 // ============================================
