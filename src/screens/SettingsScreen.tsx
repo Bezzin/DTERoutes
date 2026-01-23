@@ -210,10 +210,18 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.linkRow, styles.linkRowLast]}
+            style={styles.linkRow}
             onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`)}
           >
             <Text style={styles.linkText}>Contact Support</Text>
+            <Text style={styles.linkArrow}>→</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.linkRow, styles.linkRowLast]}
+            onPress={() => navigation.navigate('Feedback')}
+          >
+            <Text style={styles.linkText}>Report an Issue / Suggestion</Text>
             <Text style={styles.linkArrow}>→</Text>
           </TouchableOpacity>
         </View>

@@ -157,6 +157,14 @@ export default function TestCenterScreen({
       <FlatList
         data={routes}
         keyExtractor={item => item.id}
+        ListFooterComponent={() => (
+          <TouchableOpacity
+            style={styles.missingRoutesButton}
+            onPress={() => navigation.navigate('Feedback', { testCenterName })}
+          >
+            <Text style={styles.missingRoutesText}>Missing Routes? Let us know</Text>
+          </TouchableOpacity>
+        )}
         renderItem={({ item }) => {
           const isFree = isFirstFreeRoute(item.id);
           const isPremium = requiresSubscription(item.id);
@@ -397,5 +405,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#9ca3af',
     textAlign: 'center',
+  },
+  missingRoutesButton: {
+    marginTop: 16,
+    marginBottom: 32,
+    padding: 12,
+    alignItems: 'center',
+  },
+  missingRoutesText: {
+    fontSize: 14,
+    color: '#6b7280',
+    textDecorationLine: 'underline',
   },
 });
