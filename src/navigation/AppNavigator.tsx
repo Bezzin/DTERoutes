@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import { View, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
@@ -38,7 +39,26 @@ export default function AppNavigator() {
           name="Home"
           component={HomeScreen}
           options={{
-            title: 'Test Routes Expert',
+            headerTitle: () => (
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={{ color: '#ffffff', fontSize: 18, fontWeight: 'bold' }}>
+                  Test Routes Expert
+                </Text>
+                <View
+                  style={{
+                    backgroundColor: '#fef3c7',
+                    paddingHorizontal: 6,
+                    paddingVertical: 2,
+                    borderRadius: 4,
+                    marginLeft: 8,
+                  }}
+                >
+                  <Text style={{ color: '#d97706', fontSize: 10, fontWeight: '700' }}>
+                    ALPHA
+                  </Text>
+                </View>
+              </View>
+            ),
           }}
         />
         <Stack.Screen
