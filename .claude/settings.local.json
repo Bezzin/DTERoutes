@@ -72,7 +72,13 @@
       "Bash(gh api:*)",
       "mcp__filesystem__list_directory",
       "mcp__filesystem__read_text_file",
-      "mcp__filesystem__directory_tree"
+      "mcp__filesystem__directory_tree",
+      "Skill(superpowers:writing-plans)",
+      "Skill(superpowers:subagent-driven-development)",
+      "Bash(npx jest:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git commit:*)",
+      "Bash(npm test:*)"
     ],
     "deny": [],
     "ask": []

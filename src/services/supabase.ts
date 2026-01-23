@@ -231,3 +231,104 @@ export async function getStats() {
     routes: routesResult.count || 0,
   };
 }
+
+// ============================================
+// Route Requests API
+// ============================================
+
+/**
+ * Submit a route request for a test center
+ * Returns success/error status (handles duplicates gracefully)
+ */
+export async function submitRouteRequest(
+  testCenterId: string,
+  deviceId: string
+): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from('route_requests')
+    .insert({
+      test_center_id: testCenterId,
+      device_id: deviceId,
+    });
+
+  if (error) {
+    // Handle duplicate constraint violation gracefully
+    if (error.code === '23505') {
+      return { success: false, error: 'Already requested' };
+    }
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+/**
+ * Check if a device has already requested routes for a test center
+ */
+export async function hasRequestedRoutes(
+  testCenterId: string,
+  deviceId: string
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('route_requests')
+    .select('id')
+    .eq('test_center_id', testCenterId)
+    .eq('device_id', deviceId)
+    .single();
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('Error checking route request:', error);
+  }
+
+  return !!data;
+}
+
+/**
+ * Get the number of route requests for a test center
+ */
+export async function getRouteRequestCount(
+  testCenterId: string
+): Promise<number> {
+  const { count, error } = await supabase
+    .from('route_requests')
+    .select('*', { count: 'exact', head: true })
+    .eq('test_center_id', testCenterId);
+
+  if (error) {
+    console.error('Error getting route request count:', error);
+    return 0;
+  }
+
+  return count ?? 0;
+}
+
+// ============================================
+// User Feedback API
+// ============================================
+
+/**
+ * Input type for submitting user feedback
+ */
+export interface FeedbackInput {
+  device_id: string;
+  feedback_type: FeedbackType;
+  test_center_name: string | null;
+  message: string;
+}
+
+/**
+ * Submit user feedback
+ */
+export async function submitFeedback(
+  feedback: FeedbackInput
+): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from('user_feedback')
+    .insert(feedback);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
