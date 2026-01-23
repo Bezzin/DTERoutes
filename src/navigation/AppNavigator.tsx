@@ -15,6 +15,7 @@ import TestCenterScreen from '../screens/TestCenterScreen';
 import RouteDetailScreen from '../screens/RouteDetailScreen';
 import NavigationScreen from '../screens/NavigationScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import FeedbackScreen from '../screens/FeedbackScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -67,6 +68,13 @@ export default function AppNavigator() {
           component={SettingsScreen}
           options={{
             title: 'Settings',
+          }}
+        />
+        <Stack.Screen
+          name="Feedback"
+          component={FeedbackScreen}
+          options={{
+            title: 'Send Feedback',
           }}
         />
       </Stack.Navigator>
