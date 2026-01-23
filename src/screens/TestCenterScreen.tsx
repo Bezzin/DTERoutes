@@ -18,12 +18,13 @@ import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import { TestCenterScreenProps } from '../types/navigation';
 import { useRoutesStore } from '../store/useRoutesStore';
 import { useSubscriptionStore } from '../store/useSubscriptionStore';
+import { RouteRequestCard } from '../components/RouteRequestCard';
 
 export default function TestCenterScreen({
   route,
   navigation,
 }: TestCenterScreenProps) {
-  const { testCenterId } = route.params;
+  const { testCenterId, testCenterName } = route.params;
   const { routes, isLoading, error, fetchByTestCenter } = useRoutesStore();
   const {
     isSubscribed,
@@ -146,6 +147,12 @@ export default function TestCenterScreen({
           </Text>
         </View>
       </View>
+
+      <RouteRequestCard
+        testCenterId={testCenterId}
+        testCenterName={testCenterName}
+        routeCount={routes.length}
+      />
 
       <FlatList
         data={routes}
