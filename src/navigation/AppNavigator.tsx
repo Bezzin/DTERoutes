@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import {View, Text} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../types/navigation';
@@ -17,6 +18,8 @@ import NavigationScreen from '../screens/NavigationScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import RouteProgressionScreen from '../screens/RouteProgressionScreen';
 import PaywallScreen from '../screens/PaywallScreen';
+import FeedbackScreen from '../screens/FeedbackScreen';
+import {Colors, Typography, BorderRadius} from '../theme';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -38,7 +41,30 @@ export default function AppNavigator() {
           name="Home"
           component={HomeScreen}
           options={{
-            title: 'Test Routes Expert',
+            headerTitle: () => (
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={{color: '#ffffff', fontSize: 18, fontWeight: 'bold'}}>
+                  Test Routes Expert
+                </Text>
+                <View
+                  style={{
+                    backgroundColor: Colors.warning,
+                    paddingHorizontal: 6,
+                    paddingVertical: 2,
+                    borderRadius: BorderRadius.xs,
+                    marginLeft: 8,
+                  }}>
+                  <Text
+                    style={{
+                      ...Typography.badge,
+                      color: '#92400e',
+                      fontWeight: '700',
+                    }}>
+                    ALPHA
+                  </Text>
+                </View>
+              </View>
+            ),
           }}
         />
         <Stack.Screen
@@ -83,6 +109,13 @@ export default function AppNavigator() {
           options={{
             headerShown: false,
             presentation: 'modal',
+          }}
+        />
+        <Stack.Screen
+          name="Feedback"
+          component={FeedbackScreen}
+          options={{
+            title: 'Feedback',
           }}
         />
       </Stack.Navigator>

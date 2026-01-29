@@ -389,6 +389,16 @@ export default function SettingsScreen({
               </View>
               <ChevronRightIcon />
             </TouchableOpacity>
+            <View style={styles.settingDivider} />
+            <TouchableOpacity
+              style={styles.linkRow}
+              onPress={() => navigation.navigate('Feedback', {})}>
+              <View style={styles.linkLeft}>
+                <MailIcon />
+                <Text style={styles.linkText}>Report an Issue / Suggestion</Text>
+              </View>
+              <ChevronRightIcon />
+            </TouchableOpacity>
           </DarkCard>
         </View>
 

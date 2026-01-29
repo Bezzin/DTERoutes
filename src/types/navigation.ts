@@ -26,6 +26,9 @@ export type RootStackParamList = {
     testCenterName: string;
   };
   Paywall: undefined;
+  Feedback: {
+    testCenterName?: string;
+  };
 };
 
 // Screen props types for each screen
@@ -56,4 +59,8 @@ export type RouteProgressionScreenProps = NativeStackScreenProps<
 export type PaywallScreenProps = NativeStackScreenProps<
   RootStackParamList,
   'Paywall'
+>;
+export type FeedbackScreenProps = NativeStackScreenProps<
+  RootStackParamList,
+  'Feedback'
 >;

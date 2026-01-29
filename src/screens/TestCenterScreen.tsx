@@ -19,7 +19,8 @@ import LinearGradient from 'react-native-linear-gradient';
 import {TestCenterScreenProps} from '../types/navigation';
 import {useRoutesStore} from '../store/useRoutesStore';
 import {useSubscriptionStore} from '../store/useSubscriptionStore';
-import {Colors, Gradients} from '../theme';
+import {RouteRequestCard} from '../components/RouteRequestCard';
+import {Colors, Gradients, Spacing} from '../theme';
 
 // Lock icon component
 function LockIcon({size = 24, color = Colors.primaryAccent}: {size?: number; color?: string}) {
@@ -166,6 +167,8 @@ export default function TestCenterScreen({
     );
   }
 
+  const {testCenterName} = route.params;
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -180,6 +183,24 @@ export default function TestCenterScreen({
       <FlatList
         data={routes}
         keyExtractor={item => item.id}
+        ListHeaderComponent={
+          routes.length <= 2 ? (
+            <RouteRequestCard
+              testCenterId={testCenterId}
+              testCenterName={testCenterName}
+              routeCount={routes.length}
+            />
+          ) : null
+        }
+        ListFooterComponent={
+          <TouchableOpacity
+            style={styles.missingRoutesLink}
+            onPress={() => navigation.navigate('Feedback', {testCenterName})}>
+            <Text style={styles.missingRoutesText}>
+              Missing Routes? Let us know
+            </Text>
+          </TouchableOpacity>
+        }
         renderItem={({item}) => {
           const isFree = isFirstFreeRoute(item.id);
           const isPremium = requiresSubscription(item.id);
@@ -587,5 +608,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.textMuted,
     textAlign: 'center',
+  },
+  missingRoutesLink: {
+    alignItems: 'center',
+    paddingVertical: Spacing.lg,
+  },
+  missingRoutesText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.primaryAccent,
   },
 });
