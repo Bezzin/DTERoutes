@@ -6,11 +6,39 @@
  * Includes speed limit warnings
  */
 
-import React, { useState, useMemo } from 'react';
-import { StyleSheet, View, Text, Alert } from 'react-native';
+import React, {useState, useMemo} from 'react';
+import {StyleSheet, View, Text, Alert} from 'react-native';
+import Svg, {Path, Circle} from 'react-native-svg';
 import MapboxNavigation from '@pawan-pk/react-native-mapbox-navigation';
-import { sampleRouteWaypoints, logWaypointStats } from '../utils/routeUtils';
+import {sampleRouteWaypoints, logWaypointStats} from '../utils/routeUtils';
 import SpeedLimitDisplay from './SpeedLimitDisplay';
+
+// Icons for the info bar
+function ClockIcon() {
+  return (
+    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+      <Circle cx={12} cy={12} r={10} stroke="#FF5722" strokeWidth={2} />
+      <Path d="M12 6V12L16 14" stroke="#FF5722" strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+function RouteIcon() {
+  return (
+    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+      <Path d="M12 2L12 22M12 2L8 6M12 2L16 6" stroke="#FF5722" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <Circle cx={12} cy={18} r={3} stroke="#FF5722" strokeWidth={2} />
+    </Svg>
+  );
+}
+
+function FlagIcon() {
+  return (
+    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+      <Path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1v12zM4 22v-7" stroke="#FF5722" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
 
 interface SpeedLimitData {
   speed?: number;
@@ -50,17 +78,20 @@ export default function NavigationView({
   // Track waypoint arrivals to distinguish intermediate waypoints from final destination
   const [waypointArrivalCount, setWaypointArrivalCount] = useState(0);
   const totalWaypointsRef = React.useRef(0);
-  
+
   // Track current segment index for speed limit
   const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
-  const [isSpeedWarning, setIsSpeedWarning] = useState(false);
+
+  // Track route progress for custom info bar
+  const [distanceRemaining, setDistanceRemaining] = useState<number | null>(null);
+  const [durationRemaining, setDurationRemaining] = useState<number | null>(null);
 
   // Extract current speed limit from annotations
   const currentSpeedLimit = useMemo(() => {
     if (!routeAnnotations?.maxspeed || routeAnnotations.maxspeed.length === 0) {
       return undefined;
     }
-    
+
     // Get speed limit for current segment
     const speedData = routeAnnotations.maxspeed[currentSegmentIndex];
     if (!speedData || speedData.unknown) {
@@ -73,7 +104,7 @@ export default function NavigationView({
       }
       return undefined;
     }
-    
+
     return speedData.speed;
   }, [routeAnnotations, currentSegmentIndex]);
 
@@ -104,7 +135,7 @@ export default function NavigationView({
       logWaypointStats(
         allCoords.length,
         sampled.length,
-        0 // Turn count logged separately in routeUtils
+        0, // Turn count logged separately in routeUtils
       );
 
       return sampled;
@@ -129,20 +160,34 @@ export default function NavigationView({
 
   const handleLocationChange = (event: any) => {
     // Track user location during navigation
-    if (event?.nativeEvent) {
-      console.log('Location:', event.nativeEvent?.latitude, event.nativeEvent?.longitude);
+    if (__DEV__ && event?.nativeEvent) {
+      console.log(
+        'Location:',
+        event.nativeEvent?.latitude,
+        event.nativeEvent?.longitude,
+      );
     }
   };
 
   const handleRouteProgressChange = (event: any) => {
     // Track navigation progress
     if (event?.nativeEvent) {
-      console.log('Progress:', event.nativeEvent?.distanceRemaining, event.nativeEvent?.durationRemaining);
-      
+      // Update progress for custom info bar
+      if (event.nativeEvent.distanceRemaining !== undefined) {
+        setDistanceRemaining(event.nativeEvent.distanceRemaining);
+      }
+      if (event.nativeEvent.durationRemaining !== undefined) {
+        setDurationRemaining(event.nativeEvent.durationRemaining);
+      }
+
       // Update segment index based on progress if available
       // This helps track which speed limit applies
-      if (event.nativeEvent?.legIndex !== undefined && event.nativeEvent?.stepIndex !== undefined) {
-        const newIndex = event.nativeEvent.legIndex * 10 + event.nativeEvent.stepIndex;
+      if (
+        event.nativeEvent?.legIndex !== undefined &&
+        event.nativeEvent?.stepIndex !== undefined
+      ) {
+        const newIndex =
+          event.nativeEvent.legIndex * 10 + event.nativeEvent.stepIndex;
         if (newIndex !== currentSegmentIndex) {
           setCurrentSegmentIndex(newIndex);
         }
@@ -151,9 +196,12 @@ export default function NavigationView({
   };
 
   const handleSpeedUpdate = (speed: number, isOverLimit: boolean) => {
-    setIsSpeedWarning(isOverLimit);
-    if (isOverLimit) {
-      console.log(`⚠️ Speed warning: ${speed.toFixed(0)} mph (limit: ${currentSpeedLimit ? Math.round(currentSpeedLimit * 0.621371) : '?'} mph)`);
+    if (__DEV__ && isOverLimit) {
+      console.log(
+        `Speed warning: ${speed.toFixed(0)} mph (limit: ${
+          currentSpeedLimit ? Math.round(currentSpeedLimit * 0.621371) : '?'
+        } mph)`,
+      );
     }
   };
 
@@ -170,6 +218,27 @@ export default function NavigationView({
     }
   };
 
+  // Format duration from seconds to readable string
+  const formatDuration = (seconds: number): string => {
+    const mins = Math.round(seconds / 60);
+    if (mins < 60) return `${mins} min`;
+    const hrs = Math.floor(mins / 60);
+    const remainMins = mins % 60;
+    return `${hrs}h ${remainMins}m`;
+  };
+
+  // Format distance from meters to km
+  const formatDistance = (meters: number): string => {
+    const km = meters / 1000;
+    return km >= 10 ? `${Math.round(km)} km` : `${km.toFixed(1)} km`;
+  };
+
+  // Calculate ETA
+  const getETA = (seconds: number): string => {
+    const eta = new Date(Date.now() + seconds * 1000);
+    return eta.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+  };
+
   const handleArrive = () => {
     // Increment arrival count
     const newCount = waypointArrivalCount + 1;
@@ -182,53 +251,29 @@ export default function NavigationView({
 
     if (isIntermediateWaypoint) {
       // Reached an intermediate waypoint - log but don't show completion
-      console.log(`Reached waypoint ${newCount} of ${totalWaypointsRef.current}. Continuing to next waypoint...`);
-      // Optionally show a brief notification (commented out to avoid disrupting navigation)
-      // Alert.alert('Waypoint Reached', `Waypoint ${newCount} of ${totalWaypointsRef.current}`, [{ text: 'Continue' }]);
+      if (__DEV__) {
+        console.log(
+          `Reached waypoint ${newCount} of ${totalWaypointsRef.current}. Continuing to next waypoint...`,
+        );
+      }
     } else {
       // Reached final destination - show completion message
       Alert.alert(
         'Route Complete! 🎉',
         'You have successfully completed the test route.',
-        [{ text: 'OK', onPress: onArrive }]
+        [{text: 'OK', onPress: onArrive}],
       );
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* Re-routing disabled banner */}
-      <View style={[styles.warningBanner, isSpeedWarning && styles.speedWarningBanner]}>
-        <Text style={styles.warningText}>
-          {isSpeedWarning 
-            ? '🚨 SLOW DOWN - Speed limit exceeded!'
-            : '⚠️ Re-routing DISABLED - Follow exact route'}
-        </Text>
-      </View>
-
-      {/* Speed Limit Display */}
-      <View style={styles.speedLimitContainer}>
-        <SpeedLimitDisplay
-          currentSpeedLimit={currentSpeedLimit}
-          unit="mph"
-          warningThreshold={5}
-          onSpeedUpdate={handleSpeedUpdate}
-        />
-      </View>
-
-      {/* DEBUG: Waypoint progress counter - Remove before production */}
-      <View style={styles.debugBanner}>
-        <Text style={styles.debugText}>
-          🧪 DEBUG: Waypoints {waypointArrivalCount}/{totalWaypointsRef.current}
-          {waypointArrivalCount > 0 && waypointArrivalCount <= totalWaypointsRef.current && ' - CONTINUING ✓'}
-          {waypointArrivalCount > totalWaypointsRef.current && ' - COMPLETED ✓'}
-        </Text>
-      </View>
-
       <MapboxNavigation
         startOrigin={startOrigin}
         destination={destinationPoint}
-        waypoints={waypointsFormatted.length > 0 ? waypointsFormatted : undefined}
+        waypoints={
+          waypointsFormatted.length > 0 ? waypointsFormatted : undefined
+        }
         style={styles.navigation}
         shouldSimulateRoute={false} // Set to true for testing
         showCancelButton={true}
@@ -240,6 +285,44 @@ export default function NavigationView({
         onCancelNavigation={handleCancelNavigation}
         onArrive={handleArrive}
       />
+
+      {/* Overlay container for custom UI elements */}
+      <View style={styles.overlayContainer} pointerEvents="box-none">
+        {/* Speed Limit Display - bottom left corner */}
+        <View style={styles.speedLimitContainer}>
+          <SpeedLimitDisplay
+            currentSpeedLimit={currentSpeedLimit}
+            unit="mph"
+            warningThreshold={5}
+            onSpeedUpdate={handleSpeedUpdate}
+          />
+        </View>
+
+        {/* Custom styled info bar overlay */}
+        {durationRemaining !== null && distanceRemaining !== null && (
+          <View style={styles.infoBarContainer}>
+            <View style={styles.infoBar}>
+              <View style={styles.infoItem}>
+                <ClockIcon />
+                <Text style={styles.infoValue}>{formatDuration(durationRemaining)}</Text>
+                <Text style={styles.infoLabel}>remaining</Text>
+              </View>
+              <View style={styles.infoDivider} />
+              <View style={styles.infoItem}>
+                <RouteIcon />
+                <Text style={styles.infoValue}>{formatDistance(distanceRemaining)}</Text>
+                <Text style={styles.infoLabel}>to go</Text>
+              </View>
+              <View style={styles.infoDivider} />
+              <View style={styles.infoItem}>
+                <FlagIcon />
+                <Text style={styles.infoValue}>{getETA(durationRemaining)}</Text>
+                <Text style={styles.infoLabel}>arrival</Text>
+              </View>
+            </View>
+          </View>
+        )}
+      </View>
     </View>
   );
 }
@@ -252,37 +335,59 @@ const styles = StyleSheet.create({
   navigation: {
     flex: 1,
   },
-  warningBanner: {
-    backgroundColor: '#f59e0b',
-    padding: 12,
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  speedWarningBanner: {
-    backgroundColor: '#dc2626', // Red when speeding
-  },
-  warningText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
+  overlayContainer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 9999,
   },
   speedLimitContainer: {
     position: 'absolute',
-    top: 100,
-    right: 16,
-    zIndex: 1001,
+    bottom: 100,
+    left: 8,
+    zIndex: 9999,
+    elevation: 20,
   },
-  debugBanner: {
-    backgroundColor: '#8b5cf6', // Purple for debug
-    padding: 10,
+  infoBarContainer: {
+    position: 'absolute',
+    bottom: 80,
+    left: 12,
+    right: 12,
+  },
+  infoBar: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(30, 30, 30, 0.95)',
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     alignItems: 'center',
-    zIndex: 999,
+    justifyContent: 'space-around',
+    borderWidth: 1.5,
+    borderColor: '#FF5722',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 15,
   },
-  debugText: {
-    color: '#fff',
-    fontSize: 16,
+  infoItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  infoValue: {
+    color: '#FFFFFF',
+    fontSize: 18,
     fontWeight: '700',
-    textAlign: 'center',
+    marginTop: 4,
+  },
+  infoLabel: {
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontSize: 10,
+    marginTop: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  infoDivider: {
+    width: 1,
+    height: 36,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
 });

@@ -5,10 +5,9 @@
  */
 
 import React from 'react';
-import { View, Text } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../types/navigation';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {RootStackParamList} from '../types/navigation';
 
 // Import screens
 import HomeScreen from '../screens/HomeScreen';
@@ -16,7 +15,8 @@ import TestCenterScreen from '../screens/TestCenterScreen';
 import RouteDetailScreen from '../screens/RouteDetailScreen';
 import NavigationScreen from '../screens/NavigationScreen';
 import SettingsScreen from '../screens/SettingsScreen';
-import FeedbackScreen from '../screens/FeedbackScreen';
+import RouteProgressionScreen from '../screens/RouteProgressionScreen';
+import PaywallScreen from '../screens/PaywallScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -33,38 +33,18 @@ export default function AppNavigator() {
           headerTitleStyle: {
             fontWeight: 'bold',
           },
-        }}
-      >
+        }}>
         <Stack.Screen
           name="Home"
           component={HomeScreen}
           options={{
-            headerTitle: () => (
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Text style={{ color: '#ffffff', fontSize: 18, fontWeight: 'bold' }}>
-                  Test Routes Expert
-                </Text>
-                <View
-                  style={{
-                    backgroundColor: '#fef3c7',
-                    paddingHorizontal: 6,
-                    paddingVertical: 2,
-                    borderRadius: 4,
-                    marginLeft: 8,
-                  }}
-                >
-                  <Text style={{ color: '#d97706', fontSize: 10, fontWeight: '700' }}>
-                    ALPHA
-                  </Text>
-                </View>
-              </View>
-            ),
+            title: 'Test Routes Expert',
           }}
         />
         <Stack.Screen
           name="TestCenter"
           component={TestCenterScreen}
-          options={({ route }) => ({
+          options={({route}) => ({
             title: route.params.testCenterName,
           })}
         />
@@ -91,10 +71,18 @@ export default function AppNavigator() {
           }}
         />
         <Stack.Screen
-          name="Feedback"
-          component={FeedbackScreen}
+          name="RouteProgression"
+          component={RouteProgressionScreen}
           options={{
-            title: 'Send Feedback',
+            headerShown: false, // Uses custom header
+          }}
+        />
+        <Stack.Screen
+          name="Paywall"
+          component={PaywallScreen}
+          options={{
+            headerShown: false,
+            presentation: 'modal',
           }}
         />
       </Stack.Navigator>

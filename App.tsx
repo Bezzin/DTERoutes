@@ -4,21 +4,16 @@
  * UK Driving Test Routes Navigation App
  */
 
-import React, { useEffect, useState } from 'react';
-import { StatusBar, View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import React, {useEffect, useState} from 'react';
+import {StatusBar, View, StyleSheet, ActivityIndicator} from 'react-native';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
 import AppNavigator from './src/navigation/AppNavigator';
-import { initializeRevenueCat } from './src/services/revenuecat';
-import { useSubscriptionStore } from './src/store/useSubscriptionStore';
-import { useAlphaModalStore } from './src/store/useAlphaModalStore';
-import { AlphaWelcomeModal } from './src/components/AlphaWelcomeModal';
+import {initializeRevenueCat} from './src/services/revenuecat';
+import {useSubscriptionStore} from './src/store/useSubscriptionStore';
 
 function App(): React.JSX.Element {
   const [isInitializing, setIsInitializing] = useState(true);
   const initialize = useSubscriptionStore(state => state.initialize);
-  const shouldShowModal = useAlphaModalStore(state => state.shouldShowModal);
-  const dismissModal = useAlphaModalStore(state => state.dismissModal);
-  const initializeAlphaModal = useAlphaModalStore(state => state.initialize);
 
   useEffect(() => {
     const init = async () => {
@@ -27,8 +22,6 @@ function App(): React.JSX.Element {
         await initializeRevenueCat();
         // Initialize subscription store (loads persisted data, sets up listeners)
         await initialize();
-        // Initialize alpha modal store
-        await initializeAlphaModal();
       } catch (error) {
         console.error('App initialization error:', error);
       } finally {
@@ -37,7 +30,7 @@ function App(): React.JSX.Element {
     };
 
     init();
-  }, [initialize, initializeAlphaModal]);
+  }, [initialize]);
 
   // Show loading indicator while initializing
   if (isInitializing) {
@@ -55,7 +48,6 @@ function App(): React.JSX.Element {
     <SafeAreaProvider>
       <StatusBar barStyle="light-content" backgroundColor="#2563eb" />
       <AppNavigator />
-      <AlphaWelcomeModal visible={shouldShowModal} onDismiss={dismissModal} />
     </SafeAreaProvider>
   );
 }

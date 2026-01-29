@@ -1,5 +1,5 @@
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '../DTERoutes/.env') });
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const https = require('https');
 
 // Cache to avoid duplicate API calls

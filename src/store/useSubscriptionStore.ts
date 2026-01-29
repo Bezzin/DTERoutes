@@ -4,8 +4,8 @@
  * Zustand store for managing subscription state and freemium access
  */
 
-import { create } from 'zustand';
-import { CustomerInfo } from 'react-native-purchases';
+import {create} from 'zustand';
+import {CustomerInfo} from 'react-native-purchases';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   checkEntitlement,
@@ -30,7 +30,10 @@ interface SubscriptionState {
   initialize: () => Promise<void>;
   checkSubscription: () => Promise<void>;
   canAccessRoute: (testCenterId: string, routeId: string) => boolean;
-  markRouteAsFirstFree: (testCenterId: string, routeId: string) => Promise<void>;
+  markRouteAsFirstFree: (
+    testCenterId: string,
+    routeId: string,
+  ) => Promise<void>;
   getFirstFreeRouteId: (testCenterId: string) => string | null;
   clearError: () => void;
   reset: () => void;
@@ -47,16 +50,18 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
 
   // Initialize store - load persisted data and set up listeners
   initialize: async () => {
-    if (get().isInitialized) return;
+    if (get().isInitialized) {
+      return;
+    }
 
-    set({ isLoading: true });
+    set({isLoading: true});
 
     try {
       // Load persisted free routes
       const stored = await AsyncStorage.getItem(VIEWED_ROUTES_KEY);
       if (stored) {
         const freeRoutePerTestCentre = JSON.parse(stored);
-        set({ freeRoutePerTestCentre });
+        set({freeRoutePerTestCentre});
       }
 
       // Check current subscription status
@@ -90,11 +95,11 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
 
   // Check current subscription status
   checkSubscription: async () => {
-    set({ isLoading: true, error: null });
+    set({isLoading: true, error: null});
     try {
       const isSubscribed = await checkEntitlement();
       const customerInfo = await getCustomerInfo();
-      set({ isSubscribed, customerInfo, isLoading: false });
+      set({isSubscribed, customerInfo, isLoading: false});
     } catch (error: any) {
       set({
         error: error.message || 'Failed to check subscription',
@@ -109,7 +114,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   // 2. This is the first route for this test centre (free route), OR
   // 3. This route was previously marked as the free route for this test centre
   canAccessRoute: (testCenterId: string, routeId: string): boolean => {
-    const { isSubscribed, freeRoutePerTestCentre } = get();
+    const {isSubscribed, freeRoutePerTestCentre} = get();
 
     // Subscribers can access all routes
     if (isSubscribed) {
@@ -133,7 +138,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     testCenterId: string,
     routeId: string,
   ): Promise<void> => {
-    const { freeRoutePerTestCentre, isSubscribed } = get();
+    const {freeRoutePerTestCentre, isSubscribed} = get();
 
     // Don't track if user is subscribed
     if (isSubscribed) {
@@ -147,7 +152,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
         [testCenterId]: routeId,
       };
 
-      set({ freeRoutePerTestCentre: updated });
+      set({freeRoutePerTestCentre: updated});
 
       // Persist to AsyncStorage
       try {
@@ -164,7 +169,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   },
 
   // Clear error
-  clearError: () => set({ error: null }),
+  clearError: () => set({error: null}),
 
   // Reset store
   reset: () =>

@@ -4,7 +4,7 @@
  * Zustand store for managing test center state
  */
 
-import { create } from 'zustand';
+import {create} from 'zustand';
 import {
   TestCenter,
   fetchTestCenters,
@@ -34,10 +34,10 @@ export const useTestCentersStore = create<TestCentersState>((set, get) => ({
 
   // Fetch all test centers
   fetchAll: async () => {
-    set({ isLoading: true, error: null });
+    set({isLoading: true, error: null});
     try {
       const centers = await fetchTestCenters();
-      set({ testCenters: centers, isLoading: false });
+      set({testCenters: centers, isLoading: false});
     } catch (error: any) {
       set({
         error: error.message || 'Failed to fetch test centers',
@@ -51,14 +51,14 @@ export const useTestCentersStore = create<TestCentersState>((set, get) => ({
     // Check if already in cache
     const cached = get().testCenters.find(tc => tc.id === id);
     if (cached) {
-      set({ selectedTestCenter: cached });
+      set({selectedTestCenter: cached});
       return;
     }
 
-    set({ isLoading: true, error: null });
+    set({isLoading: true, error: null});
     try {
       const center = await fetchTestCenterById(id);
-      set({ selectedTestCenter: center, isLoading: false });
+      set({selectedTestCenter: center, isLoading: false});
     } catch (error: any) {
       set({
         error: error.message || 'Failed to fetch test center',
@@ -68,7 +68,7 @@ export const useTestCentersStore = create<TestCentersState>((set, get) => ({
   },
 
   // Clear error
-  clearError: () => set({ error: null }),
+  clearError: () => set({error: null}),
 
   // Reset store
   reset: () =>

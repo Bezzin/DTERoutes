@@ -6,20 +6,18 @@
  */
 
 import React from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import {View, StyleSheet, Text} from 'react-native';
 
 interface RouteMapPreviewProps {
   routeGeometry: any; // GeoJSON geometry
-  centerCoordinate?: [number, number]; // [longitude, latitude]
 }
 
-export default function RouteMapPreview({
-  routeGeometry,
-  centerCoordinate,
-}: RouteMapPreviewProps) {
+export default function RouteMapPreview({routeGeometry}: RouteMapPreviewProps) {
   // Extract coordinates from GeoJSON
   const getCoordinatesFromGeometry = () => {
-    if (!routeGeometry) return [];
+    if (!routeGeometry) {
+      return [];
+    }
 
     if (routeGeometry.type === 'LineString') {
       return routeGeometry.coordinates;
@@ -33,7 +31,10 @@ export default function RouteMapPreview({
   const pointCount = coordinates.length;
 
   // Calculate approximate bounds
-  let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+  let minLat = 90,
+    maxLat = -90,
+    minLng = 180,
+    maxLng = -180;
   coordinates.forEach((coord: number[]) => {
     minLng = Math.min(minLng, coord[0]);
     maxLng = Math.max(maxLng, coord[0]);
@@ -49,9 +50,7 @@ export default function RouteMapPreview({
       <View style={styles.mapPlaceholder}>
         <Text style={styles.mapIcon}>🗺️</Text>
         <Text style={styles.mapTitle}>Route Preview</Text>
-        <Text style={styles.mapSubtitle}>
-          Full map shown during navigation
-        </Text>
+        <Text style={styles.mapSubtitle}>Full map shown during navigation</Text>
       </View>
 
       <View style={styles.routeInfo}>

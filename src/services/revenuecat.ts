@@ -9,9 +9,10 @@ import Purchases, {
   CustomerInfo,
   PurchasesOffering,
 } from 'react-native-purchases';
+import {REVENUECAT_API_KEY as ENV_REVENUECAT_API_KEY} from '@env';
 
-// RevenueCat API Key
-const REVENUECAT_API_KEY = 'test_BjXbOQcuibjNAiUPNbflZGwqQnl';
+// RevenueCat API Key - loaded from .env file (not committed to git)
+const REVENUECAT_API_KEY = ENV_REVENUECAT_API_KEY || '';
 
 // Entitlement identifier - must match RevenueCat dashboard
 export const ENTITLEMENT_ID = 'Test Routes Expert Unlimited';
@@ -22,13 +23,20 @@ export const ENTITLEMENT_ID = 'Test Routes Expert Unlimited';
  */
 export const initializeRevenueCat = async (): Promise<void> => {
   try {
+    // Validate API key is present
+    if (!REVENUECAT_API_KEY) {
+      throw new Error(
+        'RevenueCat API key not found. Please add REVENUECAT_API_KEY to your .env file.',
+      );
+    }
+
     // Enable debug logs in development
     if (__DEV__) {
       Purchases.setLogLevel(LOG_LEVEL.DEBUG);
     }
 
     // Configure RevenueCat with API key
-    await Purchases.configure({ apiKey: REVENUECAT_API_KEY });
+    await Purchases.configure({apiKey: REVENUECAT_API_KEY});
 
     console.log('RevenueCat initialized successfully');
   } catch (error) {
@@ -90,8 +98,8 @@ export const restorePurchases = async (): Promise<CustomerInfo> => {
 export const addCustomerInfoUpdateListener = (
   callback: (info: CustomerInfo) => void,
 ): (() => void) => {
-  const listener = Purchases.addCustomerInfoUpdateListener(callback);
+  Purchases.addCustomerInfoUpdateListener(callback);
   return () => {
-    listener.remove();
+    Purchases.removeCustomerInfoUpdateListener(callback);
   };
 };
