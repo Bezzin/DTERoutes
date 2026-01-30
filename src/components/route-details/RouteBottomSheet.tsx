@@ -4,15 +4,16 @@
  * Slide-up bottom sheet for route details
  */
 
-import React, {useCallback, useMemo, forwardRef} from 'react';
+import React, {useCallback, useMemo, useState, useEffect, forwardRef} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetView,
 } from '@gorhom/bottom-sheet';
 import Svg, {Path} from 'react-native-svg';
-import {Route} from '../../services/supabase';
+import {Route, AggregatedDifficulty, fetchRouteDifficultyRatings} from '../../services/supabase';
 import {DataMatrix} from './DataMatrix';
+import {DifficultyGauge} from './DifficultyGauge';
 import {OrangeButton} from '../common';
 import {Colors, Typography, Spacing, BorderRadius, Shadows} from '../../theme';
 
@@ -38,8 +39,21 @@ function CloseIcon() {
 }
 
 
+const EMPTY_RATINGS: AggregatedDifficulty = {easy: 0, moderate: 0, challenging: 0, total: 0};
+
 export const RouteBottomSheet = forwardRef<BottomSheet, RouteBottomSheetProps>(
   ({route, onStartNavigation, onClose}, ref) => {
+    const [userRatings, setUserRatings] = useState<AggregatedDifficulty>(EMPTY_RATINGS);
+
+    // Fetch user difficulty ratings when route changes
+    useEffect(() => {
+      if (route) {
+        fetchRouteDifficultyRatings(route.id).then(setUserRatings);
+      } else {
+        setUserRatings(EMPTY_RATINGS);
+      }
+    }, [route?.id]);
+
     // Snap points
     const snapPoints = useMemo(() => ['70%'], []);
 
@@ -97,15 +111,12 @@ export const RouteBottomSheet = forwardRef<BottomSheet, RouteBottomSheetProps>(
             />
           </View>
 
-          {/* Description */}
-          <View style={styles.descriptionContainer}>
-            <Text style={styles.description}>
-              {route.difficulty === 'easy'
-                ? 'A straightforward route suitable for building confidence. Good for beginners.'
-                : route.difficulty === 'moderate'
-                ? 'Includes various road types and junctions. Watch for merge lanes and busy intersections.'
-                : 'Challenging route with complex junctions and dual carriageways. Requires careful attention.'}
-            </Text>
+          {/* Difficulty Gauge */}
+          <View style={styles.gaugeContainer}>
+            <DifficultyGauge
+              routeDifficulty={route.difficulty}
+              userRatings={userRatings}
+            />
           </View>
 
           {/* CTA Button */}
@@ -159,12 +170,9 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     marginBottom: Spacing.md,
   },
-  descriptionContainer: {
+  gaugeContainer: {
+    alignItems: 'center',
     marginBottom: Spacing.lg,
-  },
-  description: {
-    ...Typography.bodySecondary,
-    lineHeight: 22,
   },
   ctaContainer: {
     marginTop: 'auto',

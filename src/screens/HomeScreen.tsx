@@ -21,6 +21,28 @@ import {useTestCentersStore} from '../store/useTestCentersStore';
 import {SearchBar, TestCentreCard, StaggeredItem, StaggeredHeader} from '../components/explore';
 import {Colors, Typography, Spacing} from '../theme';
 
+// Mail/feedback icon
+function MailIcon() {
+  return (
+    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z"
+        stroke={Colors.text}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M22 6L12 13L2 6"
+        stroke={Colors.text}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
 // Settings gear icon
 function SettingsIcon() {
   return (
@@ -57,11 +79,18 @@ export default function HomeScreen({navigation}: HomeScreenProps) {
       headerTintColor: Colors.text,
       headerShadowVisible: false,
       headerRight: () => (
-        <TouchableOpacity
-          style={styles.headerButton}
-          onPress={() => navigation.navigate('Settings')}>
-          <SettingsIcon />
-        </TouchableOpacity>
+        <View style={styles.headerRightContainer}>
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={() => navigation.navigate('Feedback', {})}>
+            <MailIcon />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={() => navigation.navigate('Settings')}>
+            <SettingsIcon />
+          </TouchableOpacity>
+        </View>
       ),
     });
   }, [navigation]);
@@ -211,6 +240,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  headerRightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   headerButton: {
     marginRight: Spacing.sm,

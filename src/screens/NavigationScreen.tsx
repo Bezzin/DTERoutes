@@ -23,6 +23,7 @@ import {NavigationScreenProps} from '../types/navigation';
 import {useRoutesStore} from '../store/useRoutesStore';
 import NavigationView from '../components/NavigationView';
 import LocationPermissionModal from '../components/LocationPermissionModal';
+import RouteCompletionModal from '../components/RouteCompletionModal';
 
 /**
  * Extract speed limit annotations from Mapbox route data
@@ -65,6 +66,7 @@ export default function NavigationScreen({
   // Permission state
   const [hasLocationPermission, setHasLocationPermission] = useState<boolean | null>(null);
   const [showPermissionModal, setShowPermissionModal] = useState(false);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
 
   // Check permission status on mount
   useEffect(() => {
@@ -231,14 +233,12 @@ export default function NavigationScreen({
       markRouteCompleted(selectedRoute.test_center_id, selectedRoute.id);
     }
 
-    Alert.alert('Route Complete!', 'You have arrived at the destination.', [
-      {
-        text: 'OK',
-        onPress: () => {
-          navigation.goBack();
-        },
-      },
-    ]);
+    setShowCompletionModal(true);
+  };
+
+  const handleCompletionDismiss = () => {
+    setShowCompletionModal(false);
+    navigation.goBack();
   };
 
   return (
@@ -284,6 +284,14 @@ export default function NavigationScreen({
       <TouchableOpacity style={styles.endButton} onPress={handleEndNavigation}>
         <Text style={styles.endButtonText}>✕ End Navigation</Text>
       </TouchableOpacity>
+
+      {/* Route Completion Feedback Modal */}
+      <RouteCompletionModal
+        visible={showCompletionModal}
+        routeId={routeId}
+        routeName={selectedRoute?.name || 'Route'}
+        onComplete={handleCompletionDismiss}
+      />
 
       {/* Critical Implementation Comments (for developers) */}
       {/*

@@ -9,14 +9,13 @@ import React, {useEffect, useRef, useCallback, useState, useMemo} from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
   Dimensions,
   ActivityIndicator,
   Text,
   TouchableOpacity,
 } from 'react-native';
 import BottomSheet from '@gorhom/bottom-sheet';
-import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import {GestureHandlerRootView, ScrollView} from 'react-native-gesture-handler';
 import {useRoutesStore} from '../store/useRoutesStore';
 import {useSubscriptionStore} from '../store/useSubscriptionStore';
 import {Route} from '../services/supabase';
@@ -70,15 +69,7 @@ export default function RouteProgressionScreen({navigation, route: navRoute}: an
     [routes.length],
   );
 
-  // Scroll to bottom (Route 1) on initial load
-  useEffect(() => {
-    if (routes.length > 0 && scrollViewRef.current) {
-      // Small delay to ensure layout is complete
-      setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({animated: false});
-      }, 100);
-    }
-  }, [routes.length]);
+  // ScrollView starts at top naturally, showing Route 1 first
 
   // Determine route status
   const getRouteStatus = useCallback(

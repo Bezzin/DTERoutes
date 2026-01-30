@@ -90,8 +90,10 @@ export default function PaywallScreen({navigation}: any) {
   const [selectedPlan, setSelectedPlan] = useState<'lifetime' | 'monthly'>('lifetime');
   const [isLoading, setIsLoading] = useState(false);
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
-  const [lifetimePrice, setLifetimePrice] = useState<string>('\u00a350.99');
+  const [lifetimePrice, setLifetimePrice] = useState<string>('\u00a344.99');
   const [monthlyPrice, setMonthlyPrice] = useState<string>('\u00a312.99');
+  const [lifetimePriceNum, setLifetimePriceNum] = useState<number>(44.99);
+  const [monthlyPriceNum, setMonthlyPriceNum] = useState<number>(12.99);
   const {checkSubscription} = useSubscriptionStore();
 
   // Load available packages and prices
@@ -114,6 +116,9 @@ export default function PaywallScreen({navigation}: any) {
 
           if (lifetimePkg?.product?.priceString) {
             setLifetimePrice(lifetimePkg.product.priceString);
+            if (lifetimePkg.product.price) {
+              setLifetimePriceNum(lifetimePkg.product.price);
+            }
           }
 
           // Extract monthly price
@@ -124,6 +129,9 @@ export default function PaywallScreen({navigation}: any) {
 
           if (monthlyPkg?.product?.priceString) {
             setMonthlyPrice(monthlyPkg.product.priceString);
+            if (monthlyPkg.product.price) {
+              setMonthlyPriceNum(monthlyPkg.product.price);
+            }
           }
         }
       } catch (error) {
@@ -229,6 +237,12 @@ export default function PaywallScreen({navigation}: any) {
     ? 'One-time payment. Yours forever.'
     : 'Billed monthly. Cancel anytime.';
 
+  // Discount calculation: lifetime vs 12x monthly
+  const annualEquivalent = monthlyPriceNum * 12;
+  const discountPercent = annualEquivalent > 0
+    ? Math.round(((annualEquivalent - lifetimePriceNum) / annualEquivalent) * 100)
+    : 0;
+
   return (
     <ImageBackground
       source={joshImage}
@@ -302,11 +316,16 @@ export default function PaywallScreen({navigation}: any) {
               <View style={styles.priceCard}>
                 {isLifetime && (
                   <View style={styles.bestValueBadge}>
-                    <Text style={styles.bestValueText}>BEST VALUE</Text>
+                    <Text style={styles.bestValueText}>LAUNCH OFFER</Text>
                   </View>
                 )}
                 <Text style={styles.priceValue}>{displayPrice}</Text>
                 <Text style={styles.pricePeriod}>{displayPeriod}</Text>
+                {isLifetime && discountPercent > 0 && (
+                  <Text style={styles.savingsText}>
+                    Save {discountPercent}% vs monthly
+                  </Text>
+                )}
                 <Text style={styles.priceSubcopy}>{displaySubcopy}</Text>
               </View>
 
@@ -514,6 +533,12 @@ const styles = StyleSheet.create({
   pricePeriod: {
     ...Typography.body,
     color: Colors.textSecondary,
+    marginTop: Spacing.xs,
+  },
+  savingsText: {
+    ...Typography.caption,
+    color: Colors.success,
+    fontWeight: '700',
     marginTop: Spacing.xs,
   },
   priceSubcopy: {

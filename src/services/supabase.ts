@@ -337,3 +337,74 @@ export async function submitFeedback(
 
   return {success: true};
 }
+
+// ============================================
+// Route Ratings API (Post-Navigation Feedback)
+// ============================================
+
+export type PerceivedDifficulty = 'easy' | 'moderate' | 'challenging';
+
+export interface RouteRatingInput {
+  route_id: string;
+  device_id: string;
+  thumbs_up: boolean;
+  perceived_difficulty?: PerceivedDifficulty;
+  negative_reason?: string;
+  feedback_text?: string;
+}
+
+export interface AggregatedDifficulty {
+  easy: number;
+  moderate: number;
+  challenging: number;
+  total: number;
+}
+
+/**
+ * Submit a route rating after completion
+ */
+export async function submitRouteRating(
+  rating: RouteRatingInput,
+): Promise<{success: boolean; error?: string}> {
+  const {error} = await supabase.from('route_ratings').insert(rating);
+
+  if (error) {
+    return {success: false, error: error.message};
+  }
+
+  return {success: true};
+}
+
+/**
+ * Fetch aggregated difficulty ratings for a route
+ */
+export async function fetchRouteDifficultyRatings(
+  routeId: string,
+): Promise<AggregatedDifficulty> {
+  const {data, error} = await supabase
+    .from('route_ratings')
+    .select('perceived_difficulty')
+    .eq('route_id', routeId)
+    .not('perceived_difficulty', 'is', null);
+
+  if (error || !data) {
+    return {easy: 0, moderate: 0, challenging: 0, total: 0};
+  }
+
+  const counts = data.reduce(
+    (acc: AggregatedDifficulty, row: {perceived_difficulty: string}) => {
+      const key = row.perceived_difficulty as keyof Omit<AggregatedDifficulty, 'total'>;
+      if (key in acc) {
+        return {
+          ...acc,
+          [key]: acc[key] + 1,
+          total: acc.total + 1,
+        };
+      }
+      return acc;
+    },
+    {easy: 0, moderate: 0, challenging: 0, total: 0},
+  );
+
+  return counts;
+}
