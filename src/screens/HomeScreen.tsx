@@ -94,7 +94,8 @@ export default function HomeScreen({navigation}: HomeScreenProps) {
       center =>
         center.name.toLowerCase().includes(query) ||
         center.city?.toLowerCase().includes(query) ||
-        center.address?.toLowerCase().includes(query),
+        center.address?.toLowerCase().includes(query) ||
+        center.postcode?.toLowerCase().includes(query),
     );
   }, [testCenters, searchQuery]);
 
