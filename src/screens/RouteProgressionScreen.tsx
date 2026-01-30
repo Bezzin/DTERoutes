@@ -31,6 +31,7 @@ import {
   calculateContentHeight,
   RouteStatus,
 } from '../components/progression';
+import {RouteRequestCard} from '../components/RouteRequestCard';
 
 const {height: SCREEN_HEIGHT} = Dimensions.get('window');
 
@@ -213,6 +214,17 @@ export default function RouteProgressionScreen({navigation, route: navRoute}: an
           ))}
         </ScrollView>
 
+        {/* Route Request Card for centres with limited routes */}
+        {routes.length <= 2 && routes.length > 0 && (
+          <View style={styles.requestCardContainer}>
+            <RouteRequestCard
+              testCenterId={testCenterId}
+              testCenterName={testCenterName}
+              routeCount={routes.length}
+            />
+          </View>
+        )}
+
         {/* Route Details Bottom Sheet */}
         <RouteBottomSheet
           ref={bottomSheetRef}
@@ -263,5 +275,9 @@ const styles = StyleSheet.create({
   retryButtonText: {
     ...Typography.button,
     color: Colors.textOnAccent,
+  },
+  requestCardContainer: {
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.md,
   },
 });

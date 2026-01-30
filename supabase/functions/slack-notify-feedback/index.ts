@@ -5,13 +5,13 @@
  *
  * Setup:
  * 1. Deploy: supabase functions deploy slack-notify-feedback --project-ref zpfkvhnfbbimsfghmjiz
- * 2. Uses same SLACK_WEBHOOK_URL secret as route request function
+ * 2. Set secret: SLACK_FEEDBACK_WEBHOOK_URL (separate from route request webhook)
  * 3. Trigger: DB trigger on user_feedback table (INSERT)
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
-const SLACK_WEBHOOK_URL = Deno.env.get('SLACK_WEBHOOK_URL') ?? '';
+const SLACK_WEBHOOK_URL = Deno.env.get('SLACK_FEEDBACK_WEBHOOK_URL') ?? '';
 
 interface FeedbackPayload {
   type: 'INSERT';
@@ -43,7 +43,7 @@ serve(async (req) => {
 
     // Check if Slack webhook is configured
     if (!SLACK_WEBHOOK_URL) {
-      console.error('SLACK_WEBHOOK_URL not configured');
+      console.error('SLACK_FEEDBACK_WEBHOOK_URL not configured');
       return new Response('Slack webhook not configured', { status: 200 });
     }
 
