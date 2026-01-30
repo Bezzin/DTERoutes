@@ -10,7 +10,7 @@ import React, {useState, useMemo} from 'react';
 import {StyleSheet, View, Text, Alert} from 'react-native';
 import Svg, {Path, Circle} from 'react-native-svg';
 import MapboxNavigation from '@pawan-pk/react-native-mapbox-navigation';
-import {sampleRouteWaypoints, logWaypointStats} from '../utils/routeUtils';
+import {sampleRouteWaypoints} from '../utils/routeUtils';
 import SpeedLimitDisplay from './SpeedLimitDisplay';
 
 // Icons for the info bar
@@ -131,13 +131,6 @@ export default function NavigationView({
       // Sample to max 23 waypoints (Mapbox limit is 25 total coordinates)
       const sampled = sampleRouteWaypoints(intermediatePoints, 23);
 
-      // Log stats for debugging
-      logWaypointStats(
-        allCoords.length,
-        sampled.length,
-        0, // Turn count logged separately in routeUtils
-      );
-
       return sampled;
     }
 
@@ -158,15 +151,8 @@ export default function NavigationView({
     setWaypointArrivalCount(0); // Reset count when waypoints change
   }, [waypointsFormatted.length]);
 
-  const handleLocationChange = (event: any) => {
+  const handleLocationChange = (_event: any) => {
     // Track user location during navigation
-    if (__DEV__ && event?.nativeEvent) {
-      console.log(
-        'Location:',
-        event.nativeEvent?.latitude,
-        event.nativeEvent?.longitude,
-      );
-    }
   };
 
   const handleRouteProgressChange = (event: any) => {
@@ -195,14 +181,8 @@ export default function NavigationView({
     }
   };
 
-  const handleSpeedUpdate = (speed: number, isOverLimit: boolean) => {
-    if (__DEV__ && isOverLimit) {
-      console.log(
-        `Speed warning: ${speed.toFixed(0)} mph (limit: ${
-          currentSpeedLimit ? Math.round(currentSpeedLimit * 0.621371) : '?'
-        } mph)`,
-      );
-    }
+  const handleSpeedUpdate = (_speed: number, _isOverLimit: boolean) => {
+    // Speed update handler - available for future use
   };
 
   const handleError = (event: any) => {
@@ -250,12 +230,7 @@ export default function NavigationView({
     const isIntermediateWaypoint = newCount <= totalWaypointsRef.current;
 
     if (isIntermediateWaypoint) {
-      // Reached an intermediate waypoint - log but don't show completion
-      if (__DEV__) {
-        console.log(
-          `Reached waypoint ${newCount} of ${totalWaypointsRef.current}. Continuing to next waypoint...`,
-        );
-      }
+      // Reached an intermediate waypoint - continue to next
     } else {
       // Reached final destination - show completion message
       Alert.alert(

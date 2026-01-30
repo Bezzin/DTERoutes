@@ -169,7 +169,6 @@ export default function LocationPermissionModal({
         // Both permissions granted
         onPermissionGranted();
       } catch (err) {
-        console.warn('Permission request error:', err);
         Alert.alert(
           'Permission Error',
           'An error occurred while requesting permissions. Please try again or enable permissions in settings.',

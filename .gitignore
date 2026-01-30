@@ -93,5 +93,8 @@ dist/
 *.tmp
 *.temp
 
+# Script logs
+scripts/**/*.log
+
 # Claude Code local config
 .claude/

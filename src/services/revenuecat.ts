@@ -38,7 +38,6 @@ export const initializeRevenueCat = async (): Promise<void> => {
     // Configure RevenueCat with API key
     await Purchases.configure({apiKey: REVENUECAT_API_KEY});
 
-    console.log('RevenueCat initialized successfully');
   } catch (error) {
     console.error('Failed to initialize RevenueCat:', error);
     throw error;
@@ -84,7 +83,6 @@ export const getOfferings = async (): Promise<PurchasesOffering | null> => {
 export const restorePurchases = async (): Promise<CustomerInfo> => {
   try {
     const customerInfo = await Purchases.restorePurchases();
-    console.log('Purchases restored successfully');
     return customerInfo;
   } catch (error) {
     console.error('Failed to restore purchases:', error);

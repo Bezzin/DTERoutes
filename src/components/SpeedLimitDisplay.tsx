@@ -58,9 +58,7 @@ export default function SpeedLimitDisplay({
           onSpeedUpdate?.(speedDisplay, over);
         }
       },
-      error => {
-        console.log('GPS Error:', error.message);
-      },
+      _error => {},
       {
         enableHighAccuracy: true,
         distanceFilter: 5, // Update every 5 meters

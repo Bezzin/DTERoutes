@@ -205,11 +205,6 @@ export default function TestCenterScreen({
           const isFree = isFirstFreeRoute(item.id);
           const isPremium = requiresSubscription(item.id);
 
-          // Debug logging
-          if (__DEV__) {
-            console.log(`Route ${item.route_number}: isFree=${isFree}, isPremium=${isPremium}, isSubscribed=${isSubscribed}`);
-          }
-
           // Render locked route card with premium styling
           if (isPremium) {
             return (

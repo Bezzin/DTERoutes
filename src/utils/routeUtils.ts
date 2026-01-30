@@ -235,20 +235,3 @@ function toRadians(degrees: number): number {
 function toDegrees(radians: number): number {
   return (radians * 180) / Math.PI;
 }
-
-/**
- * Debug helper: Log waypoint sampling statistics
- */
-export function logWaypointStats(
-  originalCount: number,
-  sampledCount: number,
-  turnCount: number,
-): void {
-  console.log('[RouteUtils] Waypoint Sampling Stats:');
-  console.log(`  Original points: ${originalCount}`);
-  console.log(`  Sampled waypoints: ${sampledCount}`);
-  console.log(`  Significant turns found: ${turnCount}`);
-  console.log(
-    `  Compression ratio: ${(originalCount / sampledCount).toFixed(1)}:1`,
-  );
-}
