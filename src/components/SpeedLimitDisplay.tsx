@@ -5,8 +5,8 @@
  * Uses UK-style speed limit sign design
  */
 
-import React, { useEffect, useState, useRef } from 'react';
-import { StyleSheet, View, Text, Animated, Platform, PermissionsAndroid } from 'react-native';
+import React, {useEffect, useState, useRef} from 'react';
+import {StyleSheet, View, Text, Animated} from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
 
 interface SpeedLimitDisplayProps {
@@ -24,7 +24,6 @@ export default function SpeedLimitDisplay({
 }: SpeedLimitDisplayProps) {
   const [currentSpeed, setCurrentSpeed] = useState<number>(0);
   const [isOverLimit, setIsOverLimit] = useState(false);
-  const [hasLocationPermission, setHasLocationPermission] = useState(false);
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const watchId = useRef<number | null>(null);
 
@@ -35,58 +34,31 @@ export default function SpeedLimitDisplay({
       : currentSpeedLimit
     : null;
 
-  // Request location permission
-  useEffect(() => {
-    const requestPermission = async () => {
-      if (Platform.OS === 'android') {
-        try {
-          const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-            {
-              title: 'Location Permission',
-              message: 'App needs access to your location for speed monitoring',
-              buttonNeutral: 'Ask Me Later',
-              buttonNegative: 'Cancel',
-              buttonPositive: 'OK',
-            }
-          );
-          setHasLocationPermission(granted === PermissionsAndroid.RESULTS.GRANTED);
-        } catch (err) {
-          console.warn(err);
-        }
-      } else {
-        // iOS handles permission in Info.plist
-        setHasLocationPermission(true);
-      }
-    };
-
-    requestPermission();
-  }, []);
-
   // Start watching GPS speed
+  // Note: Permission is handled by NavigationScreen before this component mounts
   useEffect(() => {
-    if (!hasLocationPermission) return;
-
     watchId.current = Geolocation.watchPosition(
-      (position) => {
+      position => {
         // Speed from GPS is in m/s
         const speedMs = position.coords.speed || 0;
         // Convert to km/h or mph based on unit
-        const speedDisplay = unit === 'mph'
-          ? speedMs * 2.23694 // m/s to mph
-          : speedMs * 3.6; // m/s to km/h
+        const speedDisplay =
+          unit === 'mph'
+            ? speedMs * 2.23694 // m/s to mph
+            : speedMs * 3.6; // m/s to km/h
 
         setCurrentSpeed(Math.round(speedDisplay));
 
         // Check if over limit
         if (displaySpeedLimit && speedDisplay > 0) {
-          const limitWithThreshold = displaySpeedLimit * (1 + warningThreshold / 100);
+          const limitWithThreshold =
+            displaySpeedLimit * (1 + warningThreshold / 100);
           const over = speedDisplay > limitWithThreshold;
           setIsOverLimit(over);
           onSpeedUpdate?.(speedDisplay, over);
         }
       },
-      (error) => {
+      error => {
         console.log('GPS Error:', error.message);
       },
       {
@@ -94,7 +66,7 @@ export default function SpeedLimitDisplay({
         distanceFilter: 5, // Update every 5 meters
         interval: 1000, // Update every second
         fastestInterval: 500,
-      }
+      },
     );
 
     return () => {
@@ -102,7 +74,7 @@ export default function SpeedLimitDisplay({
         Geolocation.clearWatch(watchId.current);
       }
     };
-  }, [hasLocationPermission, displaySpeedLimit, unit, warningThreshold, onSpeedUpdate]);
+  }, [displaySpeedLimit, unit, warningThreshold, onSpeedUpdate]);
 
   // Pulse animation when over limit
   useEffect(() => {
@@ -119,7 +91,7 @@ export default function SpeedLimitDisplay({
             duration: 300,
             useNativeDriver: true,
           }),
-        ])
+        ]),
       ).start();
     } else {
       pulseAnim.setValue(1);
@@ -149,20 +121,31 @@ export default function SpeedLimitDisplay({
         style={[
           styles.speedLimitSign,
           isOverLimit && styles.speedLimitSignWarning,
-          { transform: [{ scale: pulseAnim }] },
-        ]}
-      >
+          {transform: [{scale: pulseAnim}]},
+        ]}>
         <View style={styles.speedLimitInner}>
-          <Text style={[styles.speedLimitValue, isOverLimit && styles.speedLimitValueWarning]}>
+          <Text
+            style={[
+              styles.speedLimitValue,
+              isOverLimit && styles.speedLimitValueWarning,
+            ]}>
             {displaySpeedLimit}
           </Text>
         </View>
       </Animated.View>
 
       {/* Current speed display */}
-      <View style={[styles.currentSpeedContainer, isOverLimit && styles.currentSpeedContainerWarning]}>
+      <View
+        style={[
+          styles.currentSpeedContainer,
+          isOverLimit && styles.currentSpeedContainerWarning,
+        ]}>
         <Text style={styles.currentSpeedLabel}>Your speed</Text>
-        <Text style={[styles.currentSpeedValue, isOverLimit && styles.currentSpeedValueWarning]}>
+        <Text
+          style={[
+            styles.currentSpeedValue,
+            isOverLimit && styles.currentSpeedValueWarning,
+          ]}>
           {currentSpeed}
         </Text>
         <Text style={styles.unitTextSmall}>{unit}</Text>
@@ -213,7 +196,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
@@ -283,4 +266,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-

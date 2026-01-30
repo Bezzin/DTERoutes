@@ -4,7 +4,7 @@
  * Displays route preview and allows starting navigation
  */
 
-import React, { useEffect } from 'react';
+import React, {useEffect} from 'react';
 import {
   View,
   Text,
@@ -14,36 +14,38 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import { RouteDetailScreenProps } from '../types/navigation';
-import { useRoutesStore } from '../store/useRoutesStore';
+import {RouteDetailScreenProps} from '../types/navigation';
+import {useRoutesStore} from '../store/useRoutesStore';
 import RouteMapPreview from '../components/RouteMapPreview';
 
 export default function RouteDetailScreen({
   route,
   navigation,
 }: RouteDetailScreenProps) {
-  const { routeId } = route.params;
-  const { selectedRoute, isLoading, error, fetchById } = useRoutesStore();
+  const {routeId} = route.params;
+  const {selectedRoute, isLoading, error, fetchById} = useRoutesStore();
 
   useEffect(() => {
     fetchById(routeId);
-  }, [routeId]);
+  }, [routeId, fetchById]);
 
   const handleStartNavigation = () => {
-    if (!selectedRoute) return;
+    if (!selectedRoute) {
+      return;
+    }
 
     // Check if route is processed (has Mapbox navigation data)
     if (!selectedRoute.is_processed || !selectedRoute.mapbox_route) {
       Alert.alert(
         'Route Not Ready',
         'This route has not been processed for navigation yet.',
-        [{ text: 'OK' }]
+        [{text: 'OK'}],
       );
       return;
     }
 
     // Navigate to navigation screen
-    navigation.navigate('Navigation', { routeId });
+    navigation.navigate('Navigation', {routeId});
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -65,8 +67,7 @@ export default function RouteDetailScreen({
         <Text style={styles.errorText}>⚠️ {error}</Text>
         <TouchableOpacity
           style={styles.retryButton}
-          onPress={() => fetchById(routeId)}
-        >
+          onPress={() => fetchById(routeId)}>
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
       </View>
@@ -95,13 +96,6 @@ export default function RouteDetailScreen({
               ? selectedRoute.geojson?.features?.[0]?.geometry
               : selectedRoute.geojson?.geometry
           }
-          centerCoordinate={
-            // Handle FeatureCollection structure
-            (selectedRoute.geojson?.type === 'FeatureCollection'
-              ? selectedRoute.geojson?.features?.[0]?.geometry?.coordinates?.[0]
-              : selectedRoute.geojson?.geometry?.coordinates?.[0]
-            ) as [number, number]
-          }
         />
 
         {/* Route Info Card */}
@@ -117,14 +111,12 @@ export default function RouteDetailScreen({
                   backgroundColor:
                     getDifficultyColor(selectedRoute.difficulty) + '20',
                 },
-              ]}
-            >
+              ]}>
               <Text
                 style={[
                   styles.difficultyText,
-                  { color: getDifficultyColor(selectedRoute.difficulty) },
-                ]}
-              >
+                  {color: getDifficultyColor(selectedRoute.difficulty)},
+                ]}>
                 {selectedRoute.difficulty}
               </Text>
             </View>
@@ -141,7 +133,9 @@ export default function RouteDetailScreen({
             <View style={styles.statBox}>
               <Text style={styles.statIcon}>📏</Text>
               <Text style={styles.statLabel}>Distance</Text>
-              <Text style={styles.statValue}>{selectedRoute.distance_km} km</Text>
+              <Text style={styles.statValue}>
+                {selectedRoute.distance_km} km
+              </Text>
             </View>
             <View style={styles.statBox}>
               <Text style={styles.statIcon}>⏱️</Text>
@@ -179,13 +173,13 @@ export default function RouteDetailScreen({
           <Text style={styles.instructionsTitle}>About This Route</Text>
           <Text style={styles.instructionsText}>
             This is an exact GPS trace of a real driving test route. During
-            navigation, you'll receive turn-by-turn voice instructions just like in
-            the actual test.
+            navigation, you'll receive turn-by-turn voice instructions just like
+            in the actual test.
           </Text>
           <Text style={styles.instructionsText}>
             ⚠️ <Text style={styles.boldText}>Important:</Text> Follow the route
-            exactly as shown. The app will not recalculate if you deviate from the
-            path.
+            exactly as shown. The app will not recalculate if you deviate from
+            the path.
           </Text>
         </View>
       </ScrollView>
@@ -199,8 +193,7 @@ export default function RouteDetailScreen({
               styles.startButtonDisabled,
           ]}
           onPress={handleStartNavigation}
-          disabled={!selectedRoute.is_processed || !selectedRoute.mapbox_route}
-        >
+          disabled={!selectedRoute.is_processed || !selectedRoute.mapbox_route}>
           <Text style={styles.startButtonText}>🧭 Start Navigation</Text>
         </TouchableOpacity>
       </View>

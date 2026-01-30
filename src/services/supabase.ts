@@ -4,12 +4,22 @@
  * Handles all database operations for test centers and routes
  */
 
-import { createClient } from '@supabase/supabase-js';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@env';
+import {createClient} from '@supabase/supabase-js';
+import {SUPABASE_URL, SUPABASE_ANON_KEY} from '@env';
 import 'react-native-url-polyfill/auto';
 
+// Fallback values for when env vars aren't bundled correctly
+// These are public/anon keys - safe to include in client code
+const FALLBACK_SUPABASE_URL = 'https://zpfkvhnfbbimsfghmjiz.supabase.co';
+const FALLBACK_SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpwZmt2aG5mYmJpbXNmZ2htaml6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwODkyOTEsImV4cCI6MjA3OTY2NTI5MX0.NsNYUGGZojVzBkryERIe6Qz_Km6AdZQQfhl6nElgmkw';
+
+// Use env vars if available, otherwise use fallbacks
+const supabaseUrl = SUPABASE_URL || FALLBACK_SUPABASE_URL;
+const supabaseAnonKey = SUPABASE_ANON_KEY || FALLBACK_SUPABASE_ANON_KEY;
+
 // Initialize Supabase client
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false,
@@ -26,6 +36,8 @@ export interface TestCenter {
   address: string | null;
   city: string | null;
   postcode: string | null;
+  latitude?: number;
+  longitude?: number;
   route_count: number;
   created_at: string;
 }
@@ -57,7 +69,7 @@ export interface RouteWithTestCenter extends Route {
  * Fetch all test centers, sorted by name
  */
 export async function fetchTestCenters(): Promise<TestCenter[]> {
-  const { data, error } = await supabase
+  const {data, error} = await supabase
     .from('test_centers')
     .select('*')
     .order('name');
@@ -74,7 +86,7 @@ export async function fetchTestCenters(): Promise<TestCenter[]> {
  * Fetch a single test center by ID
  */
 export async function fetchTestCenterById(id: string): Promise<TestCenter> {
-  const { data, error } = await supabase
+  const {data, error} = await supabase
     .from('test_centers')
     .select('*')
     .eq('id', id)
@@ -96,9 +108,9 @@ export async function fetchTestCenterById(id: string): Promise<TestCenter> {
  * Fetch all processed routes for a specific test center
  */
 export async function fetchRoutesByTestCenter(
-  testCenterId: string
+  testCenterId: string,
 ): Promise<Route[]> {
-  const { data, error } = await supabase
+  const {data, error} = await supabase
     .from('routes')
     .select('*')
     .eq('test_center_id', testCenterId)
@@ -117,7 +129,7 @@ export async function fetchRoutesByTestCenter(
  * Fetch a single route by ID
  */
 export async function fetchRouteById(id: string): Promise<Route> {
-  const { data, error } = await supabase
+  const {data, error} = await supabase
     .from('routes')
     .select('*')
     .eq('id', id)
@@ -136,14 +148,16 @@ export async function fetchRouteById(id: string): Promise<Route> {
  * Fetch route with its test center information
  */
 export async function fetchRouteWithTestCenter(
-  id: string
+  id: string,
 ): Promise<RouteWithTestCenter> {
-  const { data, error } = await supabase
+  const {data, error} = await supabase
     .from('routes')
-    .select(`
+    .select(
+      `
       *,
       test_center:test_centers(*)
-    `)
+    `,
+    )
     .eq('id', id)
     .eq('is_processed', true)
     .single();
@@ -160,12 +174,14 @@ export async function fetchRouteWithTestCenter(
  * Fetch all processed routes (useful for search/browsing)
  */
 export async function fetchAllRoutes(): Promise<RouteWithTestCenter[]> {
-  const { data, error } = await supabase
+  const {data, error} = await supabase
     .from('routes')
-    .select(`
+    .select(
+      `
       *,
       test_center:test_centers(*)
-    `)
+    `,
+    )
     .eq('is_processed', true)
     .order('test_center_id')
     .order('route_number');
@@ -187,7 +203,7 @@ export async function fetchAllRoutes(): Promise<RouteWithTestCenter[]> {
  */
 export async function testConnection(): Promise<boolean> {
   try {
-    const { error } = await supabase.from('test_centers').select('count');
+    const {error} = await supabase.from('test_centers').select('count');
     return !error;
   } catch (error) {
     console.error('Database connection failed:', error);
@@ -208,4 +224,116 @@ export async function getStats() {
     testCenters: centersResult.count || 0,
     routes: routesResult.count || 0,
   };
+}
+
+// ============================================
+// Route Requests API (Alpha Feature)
+// ============================================
+
+export interface RouteRequest {
+  id: string;
+  test_center_id: string;
+  device_id: string;
+  user_id: string | null;
+  created_at: string;
+}
+
+/**
+ * Submit a route request for a test center
+ * Handles duplicate requests gracefully
+ */
+export async function submitRouteRequest(
+  testCenterId: string,
+  deviceId: string,
+): Promise<{success: boolean; error?: string}> {
+  const {error} = await supabase.from('route_requests').insert({
+    test_center_id: testCenterId,
+    device_id: deviceId,
+  });
+
+  if (error) {
+    if (error.code === '23505') {
+      return {success: false, error: 'Already requested'};
+    }
+    return {success: false, error: error.message};
+  }
+
+  return {success: true};
+}
+
+/**
+ * Check if a device has already requested routes for a test center
+ */
+export async function hasRequestedRoutes(
+  testCenterId: string,
+  deviceId: string,
+): Promise<boolean> {
+  const {data, error} = await supabase
+    .from('route_requests')
+    .select('id')
+    .eq('test_center_id', testCenterId)
+    .eq('device_id', deviceId)
+    .single();
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('Error checking route request:', error);
+  }
+
+  return !!data;
+}
+
+/**
+ * Get the number of route requests for a test center
+ */
+export async function getRouteRequestCount(
+  testCenterId: string,
+): Promise<number> {
+  const {count, error} = await supabase
+    .from('route_requests')
+    .select('*', {count: 'exact', head: true})
+    .eq('test_center_id', testCenterId);
+
+  if (error) {
+    console.error('Error getting route request count:', error);
+    return 0;
+  }
+
+  return count ?? 0;
+}
+
+// ============================================
+// User Feedback API (Alpha Feature)
+// ============================================
+
+export type FeedbackType = 'bug' | 'missing_content' | 'suggestion';
+
+export interface UserFeedback {
+  id: string;
+  device_id: string;
+  feedback_type: FeedbackType;
+  test_center_name: string | null;
+  message: string;
+  created_at: string;
+}
+
+export interface FeedbackInput {
+  device_id: string;
+  feedback_type: FeedbackType;
+  test_center_name: string | null;
+  message: string;
+}
+
+/**
+ * Submit user feedback
+ */
+export async function submitFeedback(
+  feedback: FeedbackInput,
+): Promise<{success: boolean; error?: string}> {
+  const {error} = await supabase.from('user_feedback').insert(feedback);
+
+  if (error) {
+    return {success: false, error: error.message};
+  }
+
+  return {success: true};
 }

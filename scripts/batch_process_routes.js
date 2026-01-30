@@ -30,7 +30,7 @@ const { discoverTestCentres } = require('./auto_discover');
 const { geocodeTestCentre } = require('./geocode_test_centre');
 
 // Load environment variables
-require('dotenv').config({ path: path.join(__dirname, '../DTERoutes/.env') });
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;

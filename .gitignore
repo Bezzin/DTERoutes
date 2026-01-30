@@ -92,3 +92,6 @@ dist/
 # Temporary files
 *.tmp
 *.temp
+
+# Claude Code local config
+.claude/

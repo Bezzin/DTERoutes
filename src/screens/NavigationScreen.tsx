@@ -7,7 +7,7 @@
  * Users must follow the exact test route path.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -16,10 +16,13 @@ import {
   ActivityIndicator,
   Alert,
   SafeAreaView,
+  Platform,
+  PermissionsAndroid,
 } from 'react-native';
-import { NavigationScreenProps } from '../types/navigation';
-import { useRoutesStore } from '../store/useRoutesStore';
+import {NavigationScreenProps} from '../types/navigation';
+import {useRoutesStore} from '../store/useRoutesStore';
 import NavigationView from '../components/NavigationView';
+import LocationPermissionModal from '../components/LocationPermissionModal';
 
 /**
  * Extract speed limit annotations from Mapbox route data
@@ -56,39 +59,106 @@ export default function NavigationScreen({
   route,
   navigation,
 }: NavigationScreenProps) {
-  const { routeId } = route.params;
-  const { selectedRoute, isLoading, fetchById } = useRoutesStore();
-  const [isNavigating, setIsNavigating] = useState(false);
+  const {routeId} = route.params;
+  const {selectedRoute, isLoading, fetchById, markRouteCompleted} = useRoutesStore();
+
+  // Permission state
+  const [hasLocationPermission, setHasLocationPermission] = useState<boolean | null>(null);
+  const [showPermissionModal, setShowPermissionModal] = useState(false);
+
+  // Check permission status on mount
+  useEffect(() => {
+    const checkPermission = async () => {
+      if (Platform.OS === 'android') {
+        // Check location permission
+        const locationGranted = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        );
+
+        if (!locationGranted) {
+          setShowPermissionModal(true);
+          return;
+        }
+
+        // Check notification permission on Android 13+
+        const apiLevel = Platform.Version;
+        if (apiLevel >= 33) {
+          const notificationGranted = await PermissionsAndroid.check(
+            PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+          );
+
+          if (!notificationGranted) {
+            setShowPermissionModal(true);
+            return;
+          }
+        }
+
+        // All required permissions granted
+        setHasLocationPermission(true);
+      } else {
+        // iOS - assume granted (handled via Info.plist)
+        setHasLocationPermission(true);
+      }
+    };
+    checkPermission();
+  }, []);
 
   useEffect(() => {
     if (!selectedRoute || selectedRoute.id !== routeId) {
       fetchById(routeId);
     }
-  }, [routeId]);
+  }, [routeId, fetchById, selectedRoute]);
+
+  const handlePermissionGranted = () => {
+    setShowPermissionModal(false);
+    setHasLocationPermission(true);
+  };
+
+  const handlePermissionDenied = () => {
+    setShowPermissionModal(false);
+    setHasLocationPermission(false);
+    Alert.alert(
+      'Location Required',
+      'Navigation requires location access to work. Please enable location in your device settings to use this feature.',
+      [
+        {
+          text: 'Go Back',
+          onPress: () => navigation.goBack(),
+        },
+      ],
+    );
+  };
 
   const handleEndNavigation = () => {
     Alert.alert(
       'End Navigation?',
       'Are you sure you want to stop navigation?',
       [
-        { text: 'Cancel', style: 'cancel' },
+        {text: 'Cancel', style: 'cancel'},
         {
           text: 'End',
           style: 'destructive',
           onPress: () => {
-            setIsNavigating(false);
             navigation.goBack();
           },
         },
-      ]
+      ],
     );
   };
 
-  const handleStartNavigation = () => {
-    setIsNavigating(true);
-  };
+  // Show permission modal if needed
+  if (showPermissionModal) {
+    return (
+      <LocationPermissionModal
+        visible={showPermissionModal}
+        onPermissionGranted={handlePermissionGranted}
+        onPermissionDenied={handlePermissionDenied}
+      />
+    );
+  }
 
-  if (isLoading || !selectedRoute) {
+  // Show loading while checking permission or loading route
+  if (isLoading || !selectedRoute || hasLocationPermission === null) {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color="#fff" />
@@ -97,118 +167,85 @@ export default function NavigationScreen({
     );
   }
 
+  // Permission denied - this shouldn't normally show as we handle it above
+  if (hasLocationPermission === false) {
+    return (
+      <View style={styles.centerContainer}>
+        <Text style={styles.loadingText}>Location permission required</Text>
+      </View>
+    );
+  }
+
   const mapboxRoute = selectedRoute.mapbox_route;
-  const totalSteps = mapboxRoute?.legs?.reduce(
-    (sum: number, leg: any) => sum + (leg.steps?.length || 0),
-    0
-  ) || 0;
 
   // Extract origin and destination from route geometry
   // GeoJSON can be a FeatureCollection or a direct Feature
   const getCoordinates = () => {
     const geojson = selectedRoute?.geojson;
-    if (!geojson) return [];
-    
+    if (!geojson) {
+      return [];
+    }
+
     // Handle FeatureCollection
     if (geojson.type === 'FeatureCollection' && geojson.features?.length > 0) {
       return geojson.features[0]?.geometry?.coordinates || [];
     }
-    
+
     // Handle direct Feature
     if (geojson.type === 'Feature') {
       return geojson.geometry?.coordinates || [];
     }
-    
+
     // Handle direct geometry
     return geojson.geometry?.coordinates || [];
   };
-  
+
   const routeCoordinates = getCoordinates();
-  const hasValidCoordinates = routeCoordinates.length >= 2 && 
-    Array.isArray(routeCoordinates[0]) && 
+  const hasValidCoordinates =
+    routeCoordinates.length >= 2 &&
+    Array.isArray(routeCoordinates[0]) &&
     routeCoordinates[0].length >= 2;
-  
-  const origin = hasValidCoordinates ? routeCoordinates[0] as [number, number] : null;
-  const destination = hasValidCoordinates ? routeCoordinates[routeCoordinates.length - 1] as [number, number] : null;
+
+  const origin = hasValidCoordinates
+    ? (routeCoordinates[0] as [number, number])
+    : null;
+  const destination = hasValidCoordinates
+    ? (routeCoordinates[routeCoordinates.length - 1] as [number, number])
+    : null;
 
   const handleNavigationError = (error: any) => {
     console.error('Navigation error:', error);
-    Alert.alert('Navigation Error', 'Failed to start navigation. Please try again.');
+    Alert.alert(
+      'Navigation Error',
+      'Failed to start navigation. Please try again.',
+    );
   };
 
   const handleNavigationCancel = () => {
-    setIsNavigating(false);
     navigation.goBack();
   };
 
   const handleNavigationArrive = () => {
-    Alert.alert(
-      'Route Complete!',
-      'You have arrived at the destination.',
-      [
-        {
-          text: 'OK',
-          onPress: () => {
-            setIsNavigating(false);
-            navigation.goBack();
-          },
+    // Mark route as completed
+    if (selectedRoute) {
+      markRouteCompleted(selectedRoute.test_center_id, selectedRoute.id);
+    }
+
+    Alert.alert('Route Complete!', 'You have arrived at the destination.', [
+      {
+        text: 'OK',
+        onPress: () => {
+          navigation.goBack();
         },
-      ]
-    );
+      },
+    ]);
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Navigation View - In full implementation, Mapbox Navigation SDK goes here */}
+      {/* Navigation View */}
       <View style={styles.navigationView}>
-        {!isNavigating ? (
-          // Pre-navigation ready screen
-          <View style={styles.readyContainer}>
-            <Text style={styles.readyIcon}>🧭</Text>
-            <Text style={styles.readyTitle}>Navigation Ready</Text>
-            <Text style={styles.readySubtitle}>
-              Route: {selectedRoute.name}
-            </Text>
-
-            <View style={styles.statsContainer}>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Distance</Text>
-                <Text style={styles.statValue}>{selectedRoute.distance_km} km</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Duration</Text>
-                <Text style={styles.statValue}>
-                  {selectedRoute.estimated_duration_mins} mins
-                </Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Turn Instructions</Text>
-                <Text style={styles.statValue}>{totalSteps} steps</Text>
-              </View>
-            </View>
-
-            <View style={styles.warningBox}>
-              <Text style={styles.warningIcon}>⚠️</Text>
-              <Text style={styles.warningTitle}>Important</Text>
-              <Text style={styles.warningText}>
-                This is an exact test route. Follow the path precisely as shown.
-                {'\n\n'}
-                <Text style={styles.boldText}>
-                  Re-routing is DISABLED.
-                </Text>
-                {' '}If you deviate from the route, you'll see a warning but the route
-                will NOT be recalculated.
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              style={styles.startButton}
-              onPress={handleStartNavigation}
-            >
-              <Text style={styles.startButtonText}>▶️ Start Navigation</Text>
-            </TouchableOpacity>
-          </View>
-        ) : hasValidCoordinates && origin && destination ? (
+        {hasValidCoordinates && origin && destination ? (
           // Active navigation screen with map view
           <View style={styles.activeNavigationContainer}>
             <NavigationView
@@ -235,9 +272,8 @@ export default function NavigationScreen({
               Please go back and select a different route.
             </Text>
             <TouchableOpacity
-              style={[styles.startButton, { backgroundColor: '#6b7280' }]}
-              onPress={() => navigation.goBack()}
-            >
+              style={[styles.startButton, {backgroundColor: '#6b7280'}]}
+              onPress={() => navigation.goBack()}>
               <Text style={styles.startButtonText}>← Go Back</Text>
             </TouchableOpacity>
           </View>
@@ -245,10 +281,7 @@ export default function NavigationScreen({
       </View>
 
       {/* End Navigation Button (Always visible) */}
-      <TouchableOpacity
-        style={styles.endButton}
-        onPress={handleEndNavigation}
-      >
+      <TouchableOpacity style={styles.endButton} onPress={handleEndNavigation}>
         <Text style={styles.endButtonText}>✕ End Navigation</Text>
       </TouchableOpacity>
 
@@ -334,52 +367,6 @@ const styles = StyleSheet.create({
     color: '#9ca3af',
     marginBottom: 32,
     textAlign: 'center',
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginBottom: 32,
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#9ca3af',
-    marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  warningBox: {
-    backgroundColor: '#7c2d12',
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 32,
-    width: '100%',
-  },
-  warningIcon: {
-    fontSize: 32,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  warningTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#fef3c7',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  warningText: {
-    fontSize: 14,
-    color: '#fef3c7',
-    lineHeight: 20,
-  },
-  boldText: {
-    fontWeight: '700',
   },
   startButton: {
     backgroundColor: '#10b981',

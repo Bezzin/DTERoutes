@@ -18,7 +18,7 @@
  */
 export function calculateBearing(
   point1: [number, number],
-  point2: [number, number]
+  point2: [number, number],
 ): number {
   const [lon1, lat1] = point1;
   const [lon2, lat2] = point2;
@@ -44,7 +44,7 @@ export function calculateBearing(
  */
 export function calculateDistance(
   point1: [number, number],
-  point2: [number, number]
+  point2: [number, number],
 ): number {
   const [lon1, lat1] = point1;
   const [lon2, lat2] = point2;
@@ -74,7 +74,7 @@ export function calculateDistance(
  */
 export function findSignificantTurns(
   coordinates: number[][],
-  minAngleChange: number = 30
+  minAngleChange: number = 30,
 ): number[] {
   if (coordinates.length < 3) {
     return [];
@@ -119,7 +119,7 @@ export function findSignificantTurns(
  */
 export function sampleRouteWaypoints(
   coordinates: number[][],
-  maxWaypoints: number = 23
+  maxWaypoints: number = 23,
 ): Array<[number, number]> {
   // Handle edge cases
   if (coordinates.length === 0) {
@@ -150,14 +150,18 @@ export function sampleRouteWaypoints(
     if (remainingSlots > 0) {
       const fillerPoints = sampleEvenly(
         coordinates.filter((_, i) => !turnIndices.includes(i)),
-        remainingSlots
+        remainingSlots,
       );
 
       // Combine and sort by original order
       const allPoints = [...turnPoints, ...fillerPoints];
       return allPoints.sort((a, b) => {
-        const indexA = coordinates.findIndex(c => c[0] === a[0] && c[1] === a[1]);
-        const indexB = coordinates.findIndex(c => c[0] === b[0] && c[1] === b[1]);
+        const indexA = coordinates.findIndex(
+          c => c[0] === a[0] && c[1] === a[1],
+        );
+        const indexB = coordinates.findIndex(
+          c => c[0] === b[0] && c[1] === b[1],
+        );
         return indexA - indexB;
       });
     }
@@ -180,7 +184,7 @@ export function sampleRouteWaypoints(
       angleChange = 360 - angleChange;
     }
 
-    return { index: i, angle: angleChange };
+    return {index: i, angle: angleChange};
   });
 
   // Sort by angle change (sharpest first) and take top maxWaypoints
@@ -200,7 +204,7 @@ export function sampleRouteWaypoints(
  */
 function sampleEvenly(
   coordinates: number[][],
-  count: number
+  count: number,
 ): Array<[number, number]> {
   if (coordinates.length <= count) {
     return coordinates.map(c => [c[0], c[1]] as [number, number]);
@@ -238,11 +242,13 @@ function toDegrees(radians: number): number {
 export function logWaypointStats(
   originalCount: number,
   sampledCount: number,
-  turnCount: number
+  turnCount: number,
 ): void {
   console.log('[RouteUtils] Waypoint Sampling Stats:');
   console.log(`  Original points: ${originalCount}`);
   console.log(`  Sampled waypoints: ${sampledCount}`);
   console.log(`  Significant turns found: ${turnCount}`);
-  console.log(`  Compression ratio: ${(originalCount / sampledCount).toFixed(1)}:1`);
+  console.log(
+    `  Compression ratio: ${(originalCount / sampledCount).toFixed(1)}:1`,
+  );
 }
